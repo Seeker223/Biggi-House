@@ -189,7 +189,12 @@ export default function Navbar() {
               <SolidButton to="/signup">Get Started</SolidButton>
             </>
           ) : (
-            <SolidButton to="/dashboard">Dashboard</SolidButton>
+            <>
+              <SolidButton to="/dashboard">Dashboard</SolidButton>
+              <OutlineButton as="button" type="button" onClick={handleLogout}>
+                Logout
+              </OutlineButton>
+            </>
           )}
         </Actions>
         <Hamburger type="button" onClick={() => setOpen((prev) => !prev)}>

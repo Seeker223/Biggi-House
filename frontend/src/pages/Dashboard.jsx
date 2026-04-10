@@ -1,10 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
-import {
-  clearStoredHouses,
-  getStoredHouses,
-} from "../utils/auth";
+import { clearStoredHouses, getStoredHouses } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 
 const Wrapper = styled(Container)`
@@ -29,6 +26,14 @@ const Button = styled.button`
   border: none;
   background: ${({ theme }) => theme.colors.primary};
   color: #fff;
+  font-weight: 600;
+`;
+
+const SecondaryButton = styled.button`
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fff;
   font-weight: 600;
 `;
 
@@ -144,8 +149,11 @@ export default function Dashboard() {
           )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Button>Add funds</Button>
-          {house && <WarningButton onClick={handleLeaveHouse}>Leave house</WarningButton>}
+          <Button>Deposit</Button>
+          <SecondaryButton>Withdraw</SecondaryButton>
+          {houses.length > 0 && (
+            <WarningButton onClick={handleLeaveHouse}>Leave house</WarningButton>
+          )}
           <GhostButton onClick={handleLogout}>Logout</GhostButton>
         </div>
       </Header>

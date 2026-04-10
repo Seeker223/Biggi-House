@@ -76,7 +76,12 @@ const FooterText = styled.p`
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -87,13 +92,16 @@ export default function Login() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
-    if (!form.email || !form.password) {
-      setError("Please enter email and password.");
+    if (!form.firstName || !form.lastName || !form.email || !form.password) {
+      setError("Please complete all fields.");
       return;
     }
     setLoading(true);
     setTimeout(() => {
-      login({ email: form.email, name: "Demo User" });
+      login({
+        email: form.email,
+        name: `${form.firstName} ${form.lastName}`.trim(),
+      });
       setLoading(false);
       navigate("/dashboard");
     }, 900);
@@ -106,6 +114,24 @@ export default function Login() {
         <Title>Welcome back</Title>
         <Sub>Sign in to continue your savings cycle.</Sub>
         <form onSubmit={handleSubmit}>
+          <Field>
+            <Label>First name</Label>
+            <Input
+              name="firstName"
+              placeholder="Ada"
+              value={form.firstName}
+              onChange={handleChange}
+            />
+          </Field>
+          <Field>
+            <Label>Last name</Label>
+            <Input
+              name="lastName"
+              placeholder="Obi"
+              value={form.lastName}
+              onChange={handleChange}
+            />
+          </Field>
           <Field>
             <Label>Email address</Label>
             <Input
