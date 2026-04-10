@@ -5,13 +5,16 @@ import { ThemeProvider } from "styled-components";
 import App from "./App.jsx";
 import { GlobalStyles } from "./styles/GlobalStyles";
 import { theme } from "./styles/theme";
+import { AuthProvider } from "./utils/AuthContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <GlobalStyles />
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>

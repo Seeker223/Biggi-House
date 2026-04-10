@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PaymentSuccess from "./pages/PaymentSuccess";
-import { getStoredUser } from "./utils/auth";
+import { useAuth } from "./utils/AuthContext";
 
 const AppShell = styled.div`
   min-height: 100vh;
@@ -21,7 +21,7 @@ const Main = styled.main`
 `;
 
 function App() {
-  const user = getStoredUser();
+  const { user } = useAuth();
   return (
     <AppShell>
       <Navbar />

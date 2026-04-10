@@ -3,7 +3,8 @@ import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import Container from "./Container";
 import biggiLogo from "../assets/biggiHouse2.png";
-import { clearStoredHouses, clearStoredUser, getStoredHouses, getStoredUser } from "../utils/auth";
+import { getStoredHouses } from "../utils/auth";
+import { useAuth } from "../utils/AuthContext";
 
 const NavWrap = styled.header`
   position: sticky;
@@ -156,15 +157,14 @@ const MobileLogout = styled.button`
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const user = getStoredUser();
+  const { user, logout } = useAuth();
   const houses = getStoredHouses();
   const houseLabel = houses.length
     ? `Joined: ${houses.map((h) => `House ${h.number}`).join(", ")}`
     : "No house joined";
 
   const handleLogout = () => {
-    clearStoredUser();
-    clearStoredHouses();
+    logout();
     setOpen(false);
   };
 

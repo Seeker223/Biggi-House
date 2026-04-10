@@ -3,6 +3,7 @@ import { useState } from "react";
 import Container from "../components/Container";
 import { Link, useNavigate } from "react-router-dom";
 import biggiLogo from "../assets/biggiHouse2.png";
+import { useAuth } from "../utils/AuthContext";
 
 const Wrapper = styled(Container)`
   padding: 60px 0;
@@ -74,6 +75,7 @@ const FooterText = styled.p`
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -91,10 +93,7 @@ export default function Login() {
     }
     setLoading(true);
     setTimeout(() => {
-      localStorage.setItem(
-        "biggiUser",
-        JSON.stringify({ email: form.email, name: "Demo User" })
-      );
+      login({ email: form.email, name: "Demo User" });
       setLoading(false);
       navigate("/dashboard");
     }, 900);

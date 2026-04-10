@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import {
   clearStoredHouses,
-  clearStoredUser,
   getStoredHouses,
-  getStoredUser,
 } from "../utils/auth";
+import { useAuth } from "../utils/AuthContext";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 0;
@@ -116,12 +115,11 @@ const ActivityItem = styled.li`
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const user = getStoredUser();
+  const { user, logout } = useAuth();
   const houses = getStoredHouses();
 
   const handleLogout = () => {
-    clearStoredUser();
-    clearStoredHouses();
+    logout();
     navigate("/login");
   };
 

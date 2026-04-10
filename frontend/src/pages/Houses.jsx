@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
-import { addStoredHouse, getStoredHouses, getStoredUser } from "../utils/auth";
+import { addStoredHouse, getStoredHouses } from "../utils/auth";
+import { useAuth } from "../utils/AuthContext";
 
 const PageHeader = styled.div`
   padding: 40px 0 12px;
@@ -123,6 +124,7 @@ const PrimaryButton = styled.button`
 
 export default function Houses() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
   const [list, setList] = useState(houses);
@@ -154,7 +156,6 @@ export default function Houses() {
   const currentHouses = getStoredHouses();
 
   const handleJoin = (house) => {
-    const user = getStoredUser();
     if (!user) {
       navigate("/login");
       return;
