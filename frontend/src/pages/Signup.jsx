@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Container from "../components/Container";
 import { Link } from "react-router-dom";
-import biggiLogo from "../assets/BiggiHouse logo with Naira coin.png";
+import biggiLogo from "../assets/biggiHouse2.png";
 
 const Wrapper = styled(Container)`
   padding: 60px 0;
@@ -19,8 +19,8 @@ const Card = styled.div`
 `;
 
 const Logo = styled.img`
-  width: 52px;
-  height: 52px;
+  width: 68px;
+  height: 68px;
   margin-bottom: 10px;
 `;
 

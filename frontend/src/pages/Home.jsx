@@ -124,10 +124,12 @@ const SectionSub = styled.p`
   margin-bottom: 26px;
 `;
 
-const StepsGrid = styled(Container)`
+const StepsRow = styled(Container)`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 20px;
+  align-items: center;
+  position: relative;
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
@@ -140,16 +142,58 @@ const StepCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   padding: 22px;
   box-shadow: ${({ theme }) => theme.shadows.card};
+  display: grid;
+  gap: 8px;
 `;
 
 const StepIcon = styled.div`
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
   background: ${({ theme }) => theme.colors.soft};
   display: grid;
   place-items: center;
-  margin-bottom: 12px;
+`;
+
+const Arrow = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 33%;
+  width: 34%;
+  height: 2px;
+  background: ${({ theme }) => theme.colors.soft};
+  transform: translateY(-50%);
+
+  &::after,
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid ${({ theme }) => theme.colors.primary};
+    border-bottom: 2px solid ${({ theme }) => theme.colors.primary};
+    transform: translateY(-50%) rotate(-45deg);
+  }
+
+  &::before {
+    left: 0;
+  }
+
+  &::after {
+    right: 0;
+  }
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+`;
+
+const TrustText = styled.p`
+  text-align: center;
+  color: ${({ theme }) => theme.colors.muted};
+  margin-top: 18px;
+  font-size: 14px;
 `;
 
 const HousesGrid = styled(Container)`
@@ -193,6 +237,89 @@ const HighlightButton = styled(Link)`
   padding: 12px 20px;
   border-radius: 999px;
   font-weight: 600;
+`;
+
+const Partners = styled.section`
+  padding: 40px 0 20px;
+`;
+
+const PartnerRow = styled(Container)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+const PartnerTitle = styled.p`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.muted};
+`;
+
+const PartnerLogos = styled.div`
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+const PartnerBadge = styled.div`
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  font-weight: 600;
+`;
+
+const Footer = styled.footer`
+  padding: 36px 0 50px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const FooterGrid = styled(Container)`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const FooterBrand = styled.div`
+  display: grid;
+  gap: 8px;
+  color: ${({ theme }) => theme.colors.muted};
+`;
+
+const FooterLogo = styled.span`
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 20px;
+`;
+
+const FooterLinks = styled.div`
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+const Socials = styled.div`
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+
+  @media (max-width: 900px) {
+    justify-content: flex-start;
+  }
+`;
+
+const SocialChip = styled.span`
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  font-weight: 600;
+  font-size: 13px;
 `;
 
 export default function Home() {
@@ -243,31 +370,33 @@ export default function Home() {
             Simple steps designed to feel safe, transparent, and consistent.
           </SectionSub>
         </Container>
-        <StepsGrid>
+        <StepsRow>
+          <Arrow />
           {[
             {
               icon: <HouseIcon size={28} />,
               title: "Join a house",
-              text: "Choose the minimum contribution that fits you.",
+              text: "Select a contribution plan that fits you.",
             },
             {
               icon: <WalletIcon size={28} />,
               title: "Contribute monthly",
-              text: "We track your payments and progress for each cycle.",
+              text: "Pay your contribution securely each cycle.",
             },
             {
               icon: <PayoutIcon size={28} />,
-              title: "Receive payouts",
-              text: "Payouts are transparent and scheduled for every cycle.",
+              title: "Receive a payout",
+              text: "Get your full payout when it is your turn.",
             },
-          ].map((step, index) => (
+          ].map((step) => (
             <StepCard key={step.title}>
               <StepIcon>{step.icon}</StepIcon>
               <h3>{step.title}</h3>
-              <p style={{ color: "#5b6475", marginTop: "8px" }}>{step.text}</p>
+              <p style={{ color: "#5b6475" }}>{step.text}</p>
             </StepCard>
           ))}
-        </StepsGrid>
+        </StepsRow>
+        <TrustText>Secured payments · Powered by Flutterwave</TrustText>
       </Section>
 
       <Section>
@@ -318,6 +447,35 @@ export default function Home() {
           </div>
         </Container>
       </Section>
+
+      <Partners>
+        <PartnerRow>
+          <PartnerTitle>Trusted payments</PartnerTitle>
+          <PartnerLogos>
+            <PartnerBadge>Flutterwave</PartnerBadge>
+            <PartnerBadge>Paystack</PartnerBadge>
+          </PartnerLogos>
+        </PartnerRow>
+      </Partners>
+
+      <Footer>
+        <FooterGrid>
+          <FooterBrand>
+            <FooterLogo>biggiHouse</FooterLogo>
+            <p>Your trusted savings platform.</p>
+          </FooterBrand>
+          <FooterLinks>
+            <Link to="#">Terms</Link>
+            <Link to="#">Privacy</Link>
+            <Link to="#">Contact</Link>
+          </FooterLinks>
+          <Socials>
+            <SocialChip>Facebook</SocialChip>
+            <SocialChip>Twitter</SocialChip>
+            <SocialChip>Instagram</SocialChip>
+          </Socials>
+        </FooterGrid>
+      </Footer>
     </>
   );
 }
