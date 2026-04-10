@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { HouseIcon } from "./Icons";
 
 const Card = styled.article`
   background: ${({ theme }) => theme.colors.surface};
@@ -15,6 +16,21 @@ const TopRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const IconWrap = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.soft};
+  display: grid;
+  place-items: center;
 `;
 
 const Badge = styled.span`
@@ -60,7 +76,12 @@ export default function HouseCard({ house }) {
   return (
     <Card>
       <TopRow>
-        <Title>House {house.number}</Title>
+        <TitleRow>
+          <IconWrap>
+            <HouseIcon size={26} />
+          </IconWrap>
+          <Title>House {house.number}</Title>
+        </TitleRow>
         <Badge $variant={house.status}>{house.status}</Badge>
       </TopRow>
       <Meta>

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import Container from "../components/Container";
 import { Link } from "react-router-dom";
+import biggiLogo from "../assets/BiggiHouse logo with Naira coin.png";
 
 const Wrapper = styled(Container)`
   padding: 60px 0;
@@ -15,6 +16,12 @@ const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   padding: 32px;
   box-shadow: ${({ theme }) => theme.shadows.soft};
+`;
+
+const Logo = styled.img`
+  width: 52px;
+  height: 52px;
+  margin-bottom: 10px;
 `;
 
 const Title = styled.h1`
@@ -76,6 +83,7 @@ export default function Signup() {
   return (
     <Wrapper>
       <Card>
+        <Logo src={biggiLogo} alt="biggiHouse logo" />
         <Title>Create your account</Title>
         <Sub>Start your savings journey with BiggiHouse.</Sub>
         <Row>

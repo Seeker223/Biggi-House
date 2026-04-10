@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { NavLink, Link } from "react-router-dom";
 import Container from "./Container";
+import biggiLogo from "../assets/BiggiHouse logo with Naira coin.png";
 
 const NavWrap = styled.header`
   position: sticky;
@@ -20,10 +21,19 @@ const NavInner = styled(Container)`
 `;
 
 const Brand = styled(Link)`
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.primary};
   letter-spacing: -0.5px;
+`;
+
+const LogoMark = styled.img`
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
 `;
 
 const NavGroup = styled.nav`
@@ -71,7 +81,10 @@ export default function Navbar() {
   return (
     <NavWrap>
       <NavInner>
-        <Brand to="/">biggiHouse</Brand>
+        <Brand to="/">
+          <LogoMark src={biggiLogo} alt="biggiHouse logo" />
+          biggiHouse
+        </Brand>
         <NavGroup>
           <NavItem to="/" end>
             Home

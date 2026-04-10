@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
+import {
+  HouseIcon,
+  WalletIcon,
+  PayoutIcon,
+  ShieldIcon,
+} from "../components/Icons";
+import fintechMockup from "../assets/biggiHouse fintech platform interface.png";
 
 const HeroSection = styled.section`
   padding: 70px 0 40px;
@@ -25,6 +32,13 @@ const HeroCard = styled.div`
   padding: 26px;
   box-shadow: ${({ theme }) => theme.shadows.soft};
   border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const Mockup = styled.img`
+  width: 100%;
+  border-radius: 22px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.soft};
 `;
 
 const Title = styled.h1`
@@ -128,16 +142,13 @@ const StepCard = styled.div`
   box-shadow: ${({ theme }) => theme.shadows.card};
 `;
 
-const StepNumber = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+const StepIcon = styled.div`
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
   background: ${({ theme }) => theme.colors.soft};
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: 700;
+  display: grid;
+  place-items: center;
   margin-bottom: 12px;
 `;
 
@@ -203,25 +214,10 @@ export default function Home() {
             </ButtonRow>
           </div>
           <HeroCard>
-            <h3>Cycle Snapshot</h3>
-            <p style={{ color: "#5b6475", margin: "8px 0 16px" }}>
-              Track your contributions, payout position, and next cycle date in
-              one place.
-            </p>
-            <div style={{ display: "grid", gap: "12px" }}>
-              <div>
-                <strong>House 3</strong>
-                <div style={{ color: "#5b6475" }}>₦300 minimum • 7/10 members</div>
-              </div>
-              <div>
-                <strong>Next payout</strong>
-                <div style={{ color: "#5b6475" }}>June 30, 2026</div>
-              </div>
-              <div>
-                <strong>Position</strong>
-                <div style={{ color: "#5b6475" }}>4 of 10 contributors</div>
-              </div>
-            </div>
+            <Mockup
+              src={fintechMockup}
+              alt="biggiHouse fintech platform interface preview"
+            />
           </HeroCard>
         </HeroGrid>
 
@@ -250,20 +246,23 @@ export default function Home() {
         <StepsGrid>
           {[
             {
+              icon: <HouseIcon size={28} />,
               title: "Join a house",
               text: "Choose the minimum contribution that fits you.",
             },
             {
+              icon: <WalletIcon size={28} />,
               title: "Contribute monthly",
               text: "We track your payments and progress for each cycle.",
             },
             {
+              icon: <PayoutIcon size={28} />,
               title: "Receive payouts",
               text: "Payouts are transparent and scheduled for every cycle.",
             },
           ].map((step, index) => (
             <StepCard key={step.title}>
-              <StepNumber>{index + 1}</StepNumber>
+              <StepIcon>{step.icon}</StepIcon>
               <h3>{step.title}</h3>
               <p style={{ color: "#5b6475", marginTop: "8px" }}>{step.text}</p>
             </StepCard>
@@ -297,6 +296,26 @@ export default function Home() {
             </div>
             <HighlightButton to="/signup">Get started</HighlightButton>
           </Highlight>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container>
+          <SectionTitle>Trust and safety</SectionTitle>
+          <SectionSub>
+            Transparent cycles, verified payments, and dedicated support.
+          </SectionSub>
+          <div style={{ display: "grid", gap: "18px" }}>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <ShieldIcon size={32} />
+              <div>
+                <strong>Protected contributions</strong>
+                <div style={{ color: "#5b6475" }}>
+                  We verify every payment before it enters a house.
+                </div>
+              </div>
+            </div>
+          </div>
         </Container>
       </Section>
     </>
