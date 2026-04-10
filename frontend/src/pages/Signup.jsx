@@ -1,6 +1,7 @@
 import styled from "styled-components";
+import { useState } from "react";
 import Container from "../components/Container";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import biggiLogo from "../assets/biggiHouse2.png";
 
 const Wrapper = styled(Container)`
@@ -71,6 +72,8 @@ const Button = styled.button`
   color: #fff;
   font-weight: 600;
   margin-top: 10px;
+  opacity: ${({ disabled }) => (disabled ? 0.7 : 1)};
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
 const FooterText = styled.p`
@@ -80,31 +83,92 @@ const FooterText = styled.p`
 `;
 
 export default function Signup() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (event) => {
+    setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setError("");
+    if (!form.firstName || !form.lastName || !form.email || !form.password) {
+      setError("Please complete all fields.");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      localStorage.setItem(
+        "biggiUser",
+        JSON.stringify({ email: form.email, name: form.firstName })
+      );
+      setLoading(false);
+      navigate("/dashboard");
+    }, 1000);
+  };
+
   return (
     <Wrapper>
       <Card>
         <Logo src={biggiLogo} alt="biggiHouse logo" />
         <Title>Create your account</Title>
         <Sub>Start your savings journey with BiggiHouse.</Sub>
-        <Row>
+        <form onSubmit={handleSubmit}>
+          <Row>
+            <Field>
+              <Label>First name</Label>
+              <Input
+                name="firstName"
+                placeholder="Ada"
+                value={form.firstName}
+                onChange={handleChange}
+              />
+            </Field>
+            <Field>
+              <Label>Last name</Label>
+              <Input
+                name="lastName"
+                placeholder="Obi"
+                value={form.lastName}
+                onChange={handleChange}
+              />
+            </Field>
+          </Row>
           <Field>
-            <Label>First name</Label>
-            <Input placeholder="Ada" />
+            <Label>Email address</Label>
+            <Input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={handleChange}
+            />
           </Field>
           <Field>
-            <Label>Last name</Label>
-            <Input placeholder="Obi" />
+            <Label>Password</Label>
+            <Input
+              type="password"
+              name="password"
+              placeholder="Create password"
+              value={form.password}
+              onChange={handleChange}
+            />
           </Field>
-        </Row>
-        <Field>
-          <Label>Email address</Label>
-          <Input type="email" placeholder="you@example.com" />
-        </Field>
-        <Field>
-          <Label>Password</Label>
-          <Input type="password" placeholder="Create password" />
-        </Field>
-        <Button>Create account</Button>
+          {error && (
+            <p style={{ color: "#c02626", fontSize: "13px" }}>{error}</p>
+          )}
+          <Button type="submit" disabled={loading}>
+            {loading ? "Creating account..." : "Create account"}
+          </Button>
+        </form>
         <FooterText>
           Already have an account? <Link to="/login">Login</Link>
         </FooterText>

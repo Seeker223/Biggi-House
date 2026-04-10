@@ -1,5 +1,7 @@
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
+import { clearStoredUser, getStoredUser } from "../utils/auth";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 0;
@@ -23,6 +25,14 @@ const Button = styled.button`
   border: none;
   background: ${({ theme }) => theme.colors.primary};
   color: #fff;
+  font-weight: 600;
+`;
+
+const GhostButton = styled.button`
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fff;
   font-weight: 600;
 `;
 
@@ -91,16 +101,33 @@ const ActivityItem = styled.li`
 `;
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const user = getStoredUser();
+
+  const handleLogout = () => {
+    clearStoredUser();
+    navigate("/login");
+  };
+
   return (
     <Wrapper>
       <Header>
         <div>
           <Title>Dashboard</Title>
           <p style={{ color: "#5b6475" }}>
-            Welcome back, Ada. Track your savings cycle in one glance.
+            Welcome back, {user?.name || "Member"}. Track your savings cycle in
+            one glance.
           </p>
+          {user?.email && (
+            <p style={{ color: "#5b6475", marginTop: "4px" }}>
+              {user.email}
+            </p>
+          )}
         </div>
-        <Button>Add funds</Button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Button>Add funds</Button>
+          <GhostButton onClick={handleLogout}>Logout</GhostButton>
+        </div>
       </Header>
 
       <Grid>
