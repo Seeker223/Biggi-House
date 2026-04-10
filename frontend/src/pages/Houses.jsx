@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
-import { getStoredUser, setStoredHouse } from "../utils/auth";
+import { addStoredHouse, getStoredHouses, getStoredUser } from "../utils/auth";
 
 const PageHeader = styled.div`
   padding: 40px 0 12px;
@@ -151,6 +151,8 @@ export default function Houses() {
     return result;
   }, [list, range, sort]);
 
+  const currentHouses = getStoredHouses();
+
   const handleJoin = (house) => {
     const user = getStoredUser();
     if (!user) {
@@ -168,27 +170,22 @@ export default function Houses() {
       setList((prev) =>
         prev.map((house) => {
           if (house.id !== selected.id) return house;
-          const nextMembers = Math.min(house.members + 1, house.maxUsers);
+          const nextMembers = house.members + 1;
           return {
             ...house,
             members: nextMembers,
-            status:
-              nextMembers >= house.maxUsers
-                ? "Full"
-                : nextMembers > 0
-                ? "In Progress"
-                : "Open",
+            status: "In Progress",
           };
         })
       );
-      setStoredHouse({
+      addStoredHouse({
         id: selected.id,
         number: selected.number,
         minimum: selected.minimum,
       });
       setLoading(false);
-      setSuccess("You have joined House " + selected.number + ".");
       setSelected(null);
+      navigate("/payment-success");
     }, 1000);
   };
 
@@ -237,7 +234,12 @@ export default function Houses() {
       </Container>
       <Grid>
         {filtered.map((house) => (
-          <HouseCard key={house.id} house={house} onJoin={handleJoin} />
+          <HouseCard
+            key={house.id}
+            house={house}
+            onJoin={handleJoin}
+            isSelected={currentHouses.some((item) => item.id === house.id)}
+          />
         ))}
       </Grid>
 
@@ -252,7 +254,8 @@ export default function Houses() {
             <ModalRow>
               <span>Current members</span>
               <strong>
-                {selected.members}/{selected.maxUsers}
+                {selected.members}
+                {selected.maxUsers ? `/${selected.maxUsers}` : ""}
               </strong>
             </ModalRow>
             <ModalRow>

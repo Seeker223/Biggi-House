@@ -1,7 +1,12 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
-import { clearStoredUser, getStoredHouse, getStoredUser } from "../utils/auth";
+import {
+  clearStoredHouses,
+  clearStoredUser,
+  getStoredHouses,
+  getStoredUser,
+} from "../utils/auth";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 0;
@@ -33,6 +38,15 @@ const GhostButton = styled.button`
   border-radius: 999px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: #fff;
+  font-weight: 600;
+`;
+
+const WarningButton = styled.button`
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
   font-weight: 600;
 `;
 
@@ -103,11 +117,17 @@ const ActivityItem = styled.li`
 export default function Dashboard() {
   const navigate = useNavigate();
   const user = getStoredUser();
-  const house = getStoredHouse();
+  const houses = getStoredHouses();
 
   const handleLogout = () => {
     clearStoredUser();
+    clearStoredHouses();
     navigate("/login");
+  };
+
+  const handleLeaveHouse = () => {
+    clearStoredHouses();
+    navigate("/houses");
   };
 
   return (
@@ -125,8 +145,9 @@ export default function Dashboard() {
             </p>
           )}
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <Button>Add funds</Button>
+          {house && <WarningButton onClick={handleLeaveHouse}>Leave house</WarningButton>}
           <GhostButton onClick={handleLogout}>Logout</GhostButton>
         </div>
       </Header>
@@ -138,7 +159,9 @@ export default function Dashboard() {
         </Card>
         <Card>
           <CardLabel>Current house</CardLabel>
-          <CardValue>{house ? `House ${house.number}` : "Not joined"}</CardValue>
+          <CardValue>
+            {houses.length ? `House ${houses[0].number}` : "Not joined"}
+          </CardValue>
         </Card>
         <Card>
           <CardLabel>Next payout</CardLabel>
@@ -180,6 +203,25 @@ export default function Dashboard() {
               </ActivityItem>
             ))}
           </Activity>
+        </Card>
+      </Grid>
+
+      <Grid style={{ marginTop: "24px" }}>
+        <Card>
+          <CardLabel>Joined houses</CardLabel>
+          {houses.length ? (
+            <ul style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
+              {houses.map((house) => (
+                <li key={house.id}>
+                  House {house.number} · ₦{house.minimum}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={{ color: "#5b6475", marginTop: "10px" }}>
+              You have not joined a house yet.
+            </p>
+          )}
         </Card>
       </Grid>
     </Wrapper>

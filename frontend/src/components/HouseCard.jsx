@@ -50,6 +50,15 @@ const Badge = styled.span`
   font-weight: 600;
 `;
 
+const JoinBadge = styled.span`
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  font-weight: 600;
+`;
+
 const Title = styled.h3`
   font-size: 20px;
 `;
@@ -80,8 +89,8 @@ const Button = styled.button`
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
-export default function HouseCard({ house, onJoin }) {
-  const isFull = house.members >= house.maxUsers;
+export default function HouseCard({ house, onJoin, isSelected }) {
+  const isFull = Boolean(house.maxUsers && house.members >= house.maxUsers);
   return (
     <Card>
       <TopRow>
@@ -91,12 +100,17 @@ export default function HouseCard({ house, onJoin }) {
           </IconWrap>
           <Title>House {house.number}</Title>
         </TitleRow>
-        <Badge $variant={house.status}>{house.status}</Badge>
+        {isSelected ? (
+          <JoinBadge>Joined</JoinBadge>
+        ) : (
+          <Badge $variant={house.status}>{house.status}</Badge>
+        )}
       </TopRow>
       <Meta>
         <span>Minimum: ₦{house.minimum}</span>
         <span>
-          Members: {house.members}/{house.maxUsers}
+          Members: {house.members}
+          {house.maxUsers ? `/${house.maxUsers}` : ""}
         </span>
       </Meta>
       <Pool>₦{house.totalPool.toLocaleString()} pool</Pool>

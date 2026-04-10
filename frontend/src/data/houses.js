@@ -1,7 +1,7 @@
 export const houses = Array.from({ length: 10 }, (_, index) => {
   const number = index + 1;
-  const maxUsers = 10;
-  const members = Math.floor(Math.random() * 11);
+  const maxUsers = null;
+  const members = Math.floor(Math.random() * 50) + 1;
   return {
     id: `house-${number}`,
     number,
@@ -9,6 +9,6 @@ export const houses = Array.from({ length: 10 }, (_, index) => {
     members,
     maxUsers,
     totalPool: number * 100 * 10,
-    status: members >= maxUsers ? "Full" : members > 0 ? "In Progress" : "Open",
+    status: members > 0 ? "In Progress" : "Open",
   };
 });

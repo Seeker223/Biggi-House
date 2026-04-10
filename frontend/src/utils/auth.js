@@ -23,3 +23,25 @@ export const getStoredHouse = () => {
 export const setStoredHouse = (house) => {
   localStorage.setItem("biggiHouse", JSON.stringify(house));
 };
+
+export const getStoredHouses = () => {
+  try {
+    const raw = localStorage.getItem("biggiHouses");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const addStoredHouse = (house) => {
+  const houses = getStoredHouses();
+  const exists = houses.find((item) => item.id === house.id);
+  if (!exists) {
+    houses.push(house);
+    localStorage.setItem("biggiHouses", JSON.stringify(houses));
+  }
+};
+
+export const clearStoredHouses = () => {
+  localStorage.removeItem("biggiHouses");
+};

@@ -6,6 +6,7 @@ import Houses from "./pages/Houses";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { getStoredUser } from "./utils/auth";
 
 const AppShell = styled.div`
@@ -31,6 +32,10 @@ function App() {
           <Route
             path="/dashboard"
             element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/payment-success"
+            element={user ? <PaymentSuccess /> : <Navigate to="/login" replace />}
           />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
