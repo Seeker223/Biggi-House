@@ -1,7 +1,9 @@
 import styled from "styled-components";
+import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import Container from "./Container";
 import biggiLogo from "../assets/biggiHouse2.png";
+import { clearStoredUser, getStoredUser } from "../utils/auth";
 
 const NavWrap = styled.header`
   position: sticky;
@@ -61,6 +63,10 @@ const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
 `;
 
 const OutlineButton = styled(Link)`
@@ -79,7 +85,84 @@ const SolidButton = styled(Link)`
   box-shadow: ${({ theme }) => theme.shadows.card};
 `;
 
+const Hamburger = styled.button`
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fff;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-direction: column;
+  cursor: pointer;
+
+  span {
+    width: 18px;
+    height: 2px;
+    background: ${({ theme }) => theme.colors.primary};
+    display: block;
+  }
+
+  @media (max-width: 860px) {
+    display: flex;
+  }
+`;
+
+const MobileMenu = styled.div`
+  display: none;
+  background: #fff;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 12px 0 18px;
+
+  @media (max-width: 860px) {
+    display: ${({ $open }) => ($open ? "block" : "none")};
+  }
+`;
+
+const MobileLinks = styled.div`
+  display: grid;
+  gap: 12px;
+  padding: 8px 0;
+`;
+
+const MobileActions = styled.div`
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+`;
+
+const MobileButton = styled(Link)`
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: ${({ $variant, theme }) =>
+    $variant === "solid" ? theme.colors.primary : "transparent"};
+  color: ${({ $variant }) => ($variant === "solid" ? "#fff" : "inherit")};
+  border: 1px solid
+    ${({ $variant, theme }) =>
+      $variant === "solid" ? "transparent" : theme.colors.border};
+  font-weight: 600;
+`;
+
+const MobileLogout = styled.button`
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fff;
+  font-weight: 600;
+  text-align: left;
+`;
+
 export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const user = getStoredUser();
+
+  const handleLogout = () => {
+    clearStoredUser();
+    setOpen(false);
+  };
+
   return (
     <NavWrap>
       <NavInner>
@@ -94,10 +177,63 @@ export default function Navbar() {
           <NavItem to="/dashboard">Dashboard</NavItem>
         </NavGroup>
         <Actions>
-          <OutlineButton to="/login">Login</OutlineButton>
-          <SolidButton to="/signup">Get Started</SolidButton>
+          {!user ? (
+            <>
+              <OutlineButton to="/login">Login</OutlineButton>
+              <SolidButton to="/signup">Get Started</SolidButton>
+            </>
+          ) : (
+            <SolidButton to="/dashboard">Dashboard</SolidButton>
+          )}
         </Actions>
+        <Hamburger type="button" onClick={() => setOpen((prev) => !prev)}>
+          <span />
+          <span />
+          <span />
+        </Hamburger>
       </NavInner>
+      <MobileMenu $open={open}>
+        <Container>
+          <MobileLinks>
+            <NavItem to="/" end onClick={() => setOpen(false)}>
+              Home
+            </NavItem>
+            <NavItem to="/houses" onClick={() => setOpen(false)}>
+              Houses
+            </NavItem>
+            <NavItem to="/dashboard" onClick={() => setOpen(false)}>
+              Dashboard
+            </NavItem>
+          </MobileLinks>
+          <MobileActions>
+            {!user ? (
+              <>
+                <MobileButton to="/login" onClick={() => setOpen(false)}>
+                  Login
+                </MobileButton>
+                <MobileButton
+                  to="/signup"
+                  $variant="solid"
+                  onClick={() => setOpen(false)}
+                >
+                  Get Started
+                </MobileButton>
+              </>
+            ) : (
+              <>
+                <MobileButton
+                  to="/dashboard"
+                  $variant="solid"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </MobileButton>
+                <MobileLogout onClick={handleLogout}>Logout</MobileLogout>
+              </>
+            )}
+          </MobileActions>
+        </Container>
+      </MobileMenu>
     </NavWrap>
   );
 }

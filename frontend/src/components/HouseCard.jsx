@@ -37,10 +37,16 @@ const Badge = styled.span`
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
-  background: ${({ theme, $variant }) =>
-    $variant === "Open" ? "rgba(27, 77, 182, 0.12)" : "rgba(245, 158, 11, 0.18)"};
-  color: ${({ theme, $variant }) =>
-    $variant === "Open" ? theme.colors.primary : theme.colors.accent};
+  background: ${({ theme, $variant }) => {
+    if ($variant === "Full") return "rgba(239, 68, 68, 0.12)";
+    if ($variant === "Open") return "rgba(27, 77, 182, 0.12)";
+    return "rgba(245, 158, 11, 0.18)";
+  }};
+  color: ${({ theme, $variant }) => {
+    if ($variant === "Full") return "#ef4444";
+    if ($variant === "Open") return theme.colors.primary;
+    return theme.colors.accent;
+  }};
   font-weight: 600;
 `;
 
@@ -70,9 +76,12 @@ const Button = styled.button`
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+  opacity: ${({ disabled }) => (disabled ? 0.65 : 1)};
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
-export default function HouseCard({ house }) {
+export default function HouseCard({ house, onJoin }) {
+  const isFull = house.members >= house.maxUsers;
   return (
     <Card>
       <TopRow>
@@ -86,10 +95,14 @@ export default function HouseCard({ house }) {
       </TopRow>
       <Meta>
         <span>Minimum: ₦{house.minimum}</span>
-        <span>Members: {house.members}/10</span>
+        <span>
+          Members: {house.members}/{house.maxUsers}
+        </span>
       </Meta>
       <Pool>₦{house.totalPool.toLocaleString()} pool</Pool>
-      <Button>Join House</Button>
+      <Button disabled={isFull} onClick={() => onJoin?.(house)}>
+        {isFull ? "House Full" : "Join House"}
+      </Button>
     </Card>
   );
 }

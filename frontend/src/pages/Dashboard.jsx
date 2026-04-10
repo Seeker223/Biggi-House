@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
-import { clearStoredUser, getStoredUser } from "../utils/auth";
+import { clearStoredUser, getStoredHouse, getStoredUser } from "../utils/auth";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 0;
@@ -103,6 +103,7 @@ const ActivityItem = styled.li`
 export default function Dashboard() {
   const navigate = useNavigate();
   const user = getStoredUser();
+  const house = getStoredHouse();
 
   const handleLogout = () => {
     clearStoredUser();
@@ -137,7 +138,7 @@ export default function Dashboard() {
         </Card>
         <Card>
           <CardLabel>Current house</CardLabel>
-          <CardValue>House 3</CardValue>
+          <CardValue>{house ? `House ${house.number}` : "Not joined"}</CardValue>
         </Card>
         <Card>
           <CardLabel>Next payout</CardLabel>
