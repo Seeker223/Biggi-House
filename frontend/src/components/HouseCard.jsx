@@ -64,10 +64,31 @@ const Title = styled.h3`
 `;
 
 const Meta = styled.div`
-  display: grid;
-  gap: 6px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
   color: ${({ theme }) => theme.colors.muted};
   font-size: 14px;
+`;
+
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: ${({ theme }) => theme.colors.soft};
+  padding: 6px 10px;
+  border-radius: 999px;
+`;
+
+const MetaIcon = styled.span`
+  display: grid;
+  place-items: center;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 const Pool = styled.div`
@@ -107,11 +128,34 @@ export default function HouseCard({ house, onJoin, isSelected }) {
         )}
       </TopRow>
       <Meta>
-        <span>Minimum: ₦{house.minimum}</span>
-        <span>
-          Members: {house.members}
-          {house.maxUsers ? `/${house.maxUsers}` : ""}
-        </span>
+        <MetaItem>
+          <MetaIcon aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 7h16M4 17h16M7 4v16"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </MetaIcon>
+          <span>Min: {"\u20A6"}{house.minimum}</span>
+        </MetaItem>
+        <MetaItem>
+          <MetaIcon aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M16 11a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm4 9c0-3.3-3.6-6-8-6s-8 2.7-8 6"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </MetaIcon>
+          <span>
+            Members: {house.members}
+            {house.maxUsers ? `/${house.maxUsers}` : ""}
+          </span>
+        </MetaItem>
       </Meta>
       <Pool>₦{house.totalPool.toLocaleString()} pool</Pool>
       <Button disabled={isFull} onClick={() => onJoin?.(house)}>

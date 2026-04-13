@@ -54,9 +54,17 @@ const NavGroup = styled.nav`
 const NavItem = styled(NavLink)`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.muted};
+  padding: 6px 12px;
+  border-radius: 999px;
 
   &.active {
-    color: ${({ theme }) => theme.colors.ink};
+    color: #fff;
+    background: ${({ theme }) => theme.gradients.brand};
+  }
+
+  &:hover {
+    color: #fff;
+    background: ${({ theme }) => theme.gradients.brand};
   }
 `;
 
@@ -179,6 +187,9 @@ export default function Navbar() {
             Home
           </NavItem>
           <NavItem to="/houses">Houses</NavItem>
+          <NavItem to="/wallet">Wallet</NavItem>
+          <NavItem to="/profile">Profile</NavItem>
+          <NavItem to="/faq">FAQ</NavItem>
           <NavItem to="/dashboard">Dashboard</NavItem>
           {user && <span style={{ color: "#5b6475", fontSize: "14px" }}>{houseLabel}</span>}
         </NavGroup>
@@ -211,6 +222,15 @@ export default function Navbar() {
             </NavItem>
             <NavItem to="/houses" onClick={() => setOpen(false)}>
               Houses
+            </NavItem>
+            <NavItem to="/wallet" onClick={() => setOpen(false)}>
+              Wallet
+            </NavItem>
+            <NavItem to="/profile" onClick={() => setOpen(false)}>
+              Profile
+            </NavItem>
+            <NavItem to="/faq" onClick={() => setOpen(false)}>
+              FAQ
             </NavItem>
             <NavItem to="/dashboard" onClick={() => setOpen(false)}>
               Dashboard

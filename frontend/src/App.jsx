@@ -7,6 +7,9 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Wallet from "./pages/Wallet";
+import Profile from "./pages/Profile";
+import FAQ from "./pages/FAQ";
 import { useAuth } from "./utils/AuthContext";
 
 const AppShell = styled.div`
@@ -33,6 +36,15 @@ function App() {
             path="/dashboard"
             element={user ? <Dashboard /> : <Navigate to="/login" replace />}
           />
+          <Route
+            path="/wallet"
+            element={user ? <Wallet /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/profile"
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
+          />
+          <Route path="/faq" element={<FAQ />} />
           <Route
             path="/payment-success"
             element={user ? <PaymentSuccess /> : <Navigate to="/login" replace />}

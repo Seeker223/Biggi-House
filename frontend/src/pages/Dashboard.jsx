@@ -195,14 +195,14 @@ export default function Dashboard() {
           <CardLabel>Recent activity</CardLabel>
           <Activity>
             {[
-              { label: "Contribution", value: "₦300", date: "Apr 5" },
-              { label: "Contribution", value: "₦300", date: "Mar 5" },
-              { label: "Contribution", value: "₦300", date: "Feb 5" },
+              { label: "Contribution", value: "\u20A6300", date: "Apr 5" },
+              { label: "Contribution", value: "\u20A6300", date: "Mar 5" },
+              { label: "Contribution", value: "\u20A6300", date: "Feb 5" },
             ].map((item) => (
               <ActivityItem key={item.date}>
                 <span>{item.label}</span>
                 <span>
-                  {item.value} · {item.date}
+                  {item.value} {"\u00B7"} {item.date}
                 </span>
               </ActivityItem>
             ))}
@@ -217,7 +217,8 @@ export default function Dashboard() {
             <ul style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
               {houses.map((house) => (
                 <li key={house.id}>
-                  House {house.number} · ₦{house.minimum}
+                  House {house.number} {"\u00B7"} {"\u20A6"}
+                  {house.minimum}
                 </li>
               ))}
             </ul>

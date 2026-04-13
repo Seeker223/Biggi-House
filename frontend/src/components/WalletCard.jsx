@@ -16,7 +16,7 @@ const CardTop = styled.div`
 
 const CardLabel = styled.div`
   font-size: 13px;
-  opacity: 0.8;
+  opacity: 0.85;
 `;
 
 const BalanceRow = styled.div`
@@ -65,21 +65,21 @@ export default function WalletCard() {
   return (
     <Card>
       <CardTop>
-        <CardLabel>Wallet Balance</CardLabel>
+        <CardLabel>Street Name</CardLabel>
         <BalanceRow>
-          <Currency>₦</Currency>
+          <Currency>{"\u20A6"}</Currency>
           <Amount>15,000</Amount>
         </BalanceRow>
       </CardTop>
       <Body>
         <Row>
-          <span>Virtual transaction</span>
-          <RowValue>Active</RowValue>
+          <span>Virtual Transaction</span>
+          <RowValue>{"\u2699\uFE0F"}</RowValue>
         </Row>
         <Divider />
         <Row>
-          <span>SME data payment</span>
-          <RowValue>₦37,000</RowValue>
+          <span>SME Data Payment</span>
+          <RowValue>{"\u20A6"}37,000</RowValue>
         </Row>
         <Divider />
         <Row>

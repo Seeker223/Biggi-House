@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
@@ -323,6 +323,7 @@ const SocialChip = styled.span`
 `;
 
 export default function Home() {
+  const navigate = useNavigate();
   const preview = houses.slice(0, 3);
 
   return (
@@ -409,7 +410,11 @@ export default function Home() {
         </Container>
         <HousesGrid>
           {preview.map((house) => (
-            <HouseCard key={house.id} house={house} />
+            <HouseCard
+              key={house.id}
+              house={house}
+              onJoin={() => navigate("/houses")}
+            />
           ))}
         </HousesGrid>
       </Section>
