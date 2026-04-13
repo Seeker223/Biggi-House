@@ -334,7 +334,7 @@ export default function Home() {
             <Title>Save together. Earn together.</Title>
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,
-              contribute monthly, and receive scheduled payouts transparently.
+              contribute weekly, and receive scheduled payouts transparently.
             </Sub>
             <ButtonRow>
               <PrimaryButton to="/houses">Join a House</PrimaryButton>
@@ -381,7 +381,7 @@ export default function Home() {
             },
             {
               icon: <WalletIcon size={28} />,
-              title: "Contribute monthly",
+              title: "Contribute weekly",
               text: "Pay your contribution securely each cycle.",
             },
             {

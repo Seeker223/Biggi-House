@@ -176,7 +176,7 @@ export default function Dashboard() {
       <Grid style={{ marginTop: "24px" }}>
         <Card>
           <CardLabel>Cycle progress</CardLabel>
-          <CardValue>6 of 10 months</CardValue>
+          <CardValue>6 of 10 weeks</CardValue>
           <ProgressWrap>
             <Progress />
           </ProgressWrap>

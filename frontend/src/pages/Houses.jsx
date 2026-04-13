@@ -196,7 +196,7 @@ export default function Houses() {
         <PageHeader>
           <Title>Choose your house</Title>
           <Sub>
-            Select a monthly minimum and join a cycle that fits your budget.
+            Select a weekly minimum and join a cycle that fits your budget.
           </Sub>
           <Controls>
             <Filters>
@@ -250,7 +250,7 @@ export default function Houses() {
             <h2>Confirm your selection</h2>
             <p style={{ color: "#5b6475" }}>
               You are about to join House {selected.number}. This house requires
-              a minimum monthly contribution of ₦{selected.minimum}.
+              a minimum weekly contribution of ₦{selected.minimum}.
             </p>
             <ModalRow>
               <span>Current members</span>

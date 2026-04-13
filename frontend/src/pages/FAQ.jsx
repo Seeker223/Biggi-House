@@ -78,7 +78,7 @@ export default function FAQ() {
   const items = [
     {
       q: "How do houses work?",
-      a: "Each house has a minimum contribution. Once you join, you contribute monthly and follow a clear payout schedule.",
+      a: "Each house has a minimum contribution. Once you join, you contribute weekly and follow a clear payout schedule.",
     },
     {
       q: "How many people can join a house?",
