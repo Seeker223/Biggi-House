@@ -59,4 +59,22 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/me", async (req, res) => {
+  try {
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const token = header.split(" ")[1];
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(payload.id).select("_id name email");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.json({ user });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+});
+
 module.exports = router;

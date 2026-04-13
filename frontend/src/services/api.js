@@ -8,12 +8,42 @@ export async function getHouses() {
   return data.houses || [];
 }
 
-export async function joinHouse(id) {
+export async function joinHouse(id, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}/houses/${id}/join`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
   });
   if (!res.ok) throw new Error("Failed to join house");
   const data = await res.json();
   return data.house;
+}
+
+export async function registerUser(payload) {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Registration failed");
+  return res.json();
+}
+
+export async function loginUser(payload) {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Login failed");
+  return res.json();
+}
+
+export async function getMe(token) {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Unauthorized");
+  return res.json();
 }

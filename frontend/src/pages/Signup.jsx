@@ -4,6 +4,7 @@ import Container from "../components/Container";
 import { Link, useNavigate } from "react-router-dom";
 import biggiLogo from "../assets/biggiHouse2.png";
 import { useAuth } from "../utils/AuthContext";
+import { registerUser } from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 60px 0;
@@ -107,11 +108,19 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      login({ email: form.email, name: form.firstName });
-      setLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+    registerUser({
+      name: `${form.firstName} ${form.lastName}`.trim(),
+      email: form.email,
+      password: form.password,
+    })
+      .then((data) => {
+        login(data.user, data.token);
+        navigate("/dashboard");
+      })
+      .catch((err) => {
+        setError(err.message || "Unable to create account.");
+      })
+      .finally(() => setLoading(false));
   };
 
   return (

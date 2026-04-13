@@ -5,10 +5,18 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+const formatHouse = (house) => ({
+  id: house._id.toString(),
+  number: house.number,
+  minimum: house.minimum,
+  members: house.members.length,
+  status: house.status,
+});
+
 router.get("/", (req, res) => {
   House.find()
     .sort({ number: 1 })
-    .then((houses) => res.json({ houses }))
+    .then((houses) => res.json({ houses: houses.map(formatHouse) }))
     .catch(() => res.status(500).json({ message: "Server error" }));
 });
 
@@ -18,7 +26,9 @@ router.post("/:id/join", auth, async (req, res) => {
     if (!house) {
       return res.status(404).json({ message: "House not found" });
     }
-    house.members.push(req.user.id);
+    if (!house.members.includes(req.user.id)) {
+      house.members.push(req.user.id);
+    }
     await house.save();
     await Contribution.create({
       user: req.user.id,
@@ -26,7 +36,7 @@ router.post("/:id/join", auth, async (req, res) => {
       amount: house.minimum,
       status: "paid",
     });
-    return res.json({ house });
+    return res.json({ house: formatHouse(house) });
   } catch (err) {
     return res.status(500).json({ message: "Server error" });
   }

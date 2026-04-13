@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
-import { addStoredHouse, getStoredHouses } from "../utils/auth";
+import { addStoredHouse, getAuthToken, getStoredHouses } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import { getHouses, joinHouse } from "../services/api";
 
@@ -182,7 +182,8 @@ export default function Houses() {
   const confirmJoin = () => {
     if (!selected) return;
     setLoading(true);
-    joinHouse(selected.id)
+    const token = getAuthToken();
+    joinHouse(selected.id, token)
       .then((updated) => {
         setList((prev) =>
           prev.map((house) => (house.id === updated.id ? updated : house))

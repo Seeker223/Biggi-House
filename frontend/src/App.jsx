@@ -24,7 +24,10 @@ const Main = styled.main`
 `;
 
 function App() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return null;
+  }
   return (
     <AppShell>
       <Navbar />

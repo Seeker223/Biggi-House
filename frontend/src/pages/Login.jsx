@@ -4,6 +4,7 @@ import Container from "../components/Container";
 import { Link, useNavigate } from "react-router-dom";
 import biggiLogo from "../assets/biggiHouse2.png";
 import { useAuth } from "../utils/AuthContext";
+import { loginUser } from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 60px 0;
@@ -95,14 +96,15 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      login({
-        email: form.email,
-        name: form.email.split("@")[0] || "Member",
-      });
-      setLoading(false);
-      navigate("/dashboard");
-    }, 900);
+    loginUser({ email: form.email, password: form.password })
+      .then((data) => {
+        login(data.user, data.token);
+        navigate("/dashboard");
+      })
+      .catch(async (err) => {
+        setError(err.message || "Invalid email or password.");
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
