@@ -82,6 +82,17 @@ const InfoValue = styled.span`
   font-weight: 600;
 `;
 
+const HighlightStat = styled.div`
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  background: ${({ theme }) => theme.gradients.brandSoft};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+`;
+
 const SectionTitle = styled.h3`
   font-size: 18px;
   margin-bottom: 12px;
@@ -145,6 +156,10 @@ export default function Profile() {
               <InfoValue>Healthy</InfoValue>
             </InfoRow>
           </InfoList>
+          <HighlightStat>
+            <span>Total houses joined</span>
+            <span>{houses.length}</span>
+          </HighlightStat>
         </Card>
 
         <Card>

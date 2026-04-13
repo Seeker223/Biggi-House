@@ -73,18 +73,18 @@ export default function WalletCard() {
       </CardTop>
       <Body>
         <Row>
-          <span>Virtual Transaction</span>
-          <RowValue>{"\u2699\uFE0F"}</RowValue>
+          <span>Current house</span>
+          <RowValue>House 3</RowValue>
         </Row>
         <Divider />
         <Row>
-          <span>SME Data Payment</span>
+          <span>Last balance</span>
           <RowValue>{"\u20A6"}37,000</RowValue>
         </Row>
         <Divider />
         <Row>
-          <span>Expiry position</span>
-          <RowValue>May 30</RowValue>
+          <span>Weekly payout time</span>
+          <RowValue>Fridays · 6:00 PM</RowValue>
         </Row>
       </Body>
     </Card>
