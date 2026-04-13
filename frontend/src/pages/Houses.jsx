@@ -1,11 +1,12 @@
 import styled from "styled-components";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
 import { addStoredHouse, getStoredHouses } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
+import { getHouses, joinHouse } from "../services/api";
 
 const PageHeader = styled.div`
   padding: 40px 0 12px;
@@ -128,6 +129,8 @@ export default function Houses() {
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
   const [list, setList] = useState(houses);
+  const [loadingList, setLoadingList] = useState(false);
+  const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -153,6 +156,18 @@ export default function Houses() {
     return result;
   }, [list, range, sort]);
 
+  useEffect(() => {
+    setLoadingList(true);
+    getHouses()
+      .then((data) => {
+        if (data.length) setList(data);
+      })
+      .catch(() => {
+        setError("Using local data (API unavailable).");
+      })
+      .finally(() => setLoadingList(false));
+  }, []);
+
   const currentHouses = getStoredHouses();
 
   const handleJoin = (house) => {
@@ -167,27 +182,23 @@ export default function Houses() {
   const confirmJoin = () => {
     if (!selected) return;
     setLoading(true);
-    setTimeout(() => {
-      setList((prev) =>
-        prev.map((house) => {
-          if (house.id !== selected.id) return house;
-          const nextMembers = house.members + 1;
-          return {
-            ...house,
-            members: nextMembers,
-            status: "In Progress",
-          };
-        })
-      );
-      addStoredHouse({
-        id: selected.id,
-        number: selected.number,
-        minimum: selected.minimum,
-      });
-      setLoading(false);
-      setSelected(null);
-      navigate("/payment-success");
-    }, 1000);
+    joinHouse(selected.id)
+      .then((updated) => {
+        setList((prev) =>
+          prev.map((house) => (house.id === updated.id ? updated : house))
+        );
+        addStoredHouse({
+          id: updated.id,
+          number: updated.number,
+          minimum: updated.minimum,
+        });
+        setSelected(null);
+        navigate("/payment-success");
+      })
+      .catch(() => {
+        setError("Unable to join house right now.");
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -228,8 +239,13 @@ export default function Houses() {
               <option value="availability">Sort: Availability</option>
             </Select>
           </Controls>
-          {success && (
-            <p style={{ marginTop: "10px", color: "#15803d" }}>{success}</p>
+          {loadingList && (
+            <p style={{ marginTop: "10px", color: "#5b6475" }}>
+              Loading houses...
+            </p>
+          )}
+          {error && (
+            <p style={{ marginTop: "10px", color: "#b45309" }}>{error}</p>
           )}
         </PageHeader>
       </Container>
