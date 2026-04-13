@@ -196,8 +196,8 @@ export default function Houses() {
         setSelected(null);
         navigate("/payment-success");
       })
-      .catch(() => {
-        setError("Unable to join house right now.");
+      .catch((err) => {
+        setError(err.message || "Unable to join house right now.");
       })
       .finally(() => setLoading(false));
   };
