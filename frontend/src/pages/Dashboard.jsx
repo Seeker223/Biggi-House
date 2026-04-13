@@ -150,8 +150,6 @@ export default function Dashboard() {
           )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Button>Deposit</Button>
-          <SecondaryButton>Withdraw</SecondaryButton>
           {houses.length > 0 && (
             <WarningButton onClick={handleLeaveHouse}>Leave house</WarningButton>
           )}

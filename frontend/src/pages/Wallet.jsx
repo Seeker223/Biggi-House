@@ -55,6 +55,30 @@ const ActivityTitle = styled.div`
   margin: 20px 0 12px;
 `;
 
+const Actions = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 6px;
+`;
+
+const PrimaryButton = styled.button`
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  background: ${({ theme }) => theme.gradients.brand};
+  color: #fff;
+  font-weight: 600;
+`;
+
+const GhostButton = styled.button`
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fff;
+  font-weight: 600;
+`;
+
 const ActivityPanel = styled.div`
   @media (min-width: 900px) {
     background: #fff;
@@ -131,7 +155,13 @@ export default function Wallet() {
           <HeaderTitle>Selection House</HeaderTitle>
         </Header>
         <Layout>
-          <WalletCard />
+          <div>
+            <WalletCard />
+            <Actions>
+              <PrimaryButton>Deposit</PrimaryButton>
+              <GhostButton>Withdraw</GhostButton>
+            </Actions>
+          </div>
           <ActivityPanel>
             <ActivityTitle>Recent Activity</ActivityTitle>
             <ActivityItem>
