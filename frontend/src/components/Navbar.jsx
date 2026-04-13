@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import Container from "./Container";
 import biggiLogo from "../assets/biggiHouse2.png";
@@ -35,8 +35,8 @@ const Brand = styled(Link)`
 `;
 
 const LogoMark = styled.img`
-  width: 100px;
-  height: 100px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   display: block;
 `;
@@ -49,6 +49,15 @@ const NavGroup = styled.nav`
   @media (max-width: 860px) {
     display: none;
   }
+`;
+
+const HouseLabel = styled.span`
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #5b6475;
+  font-size: 14px;
 `;
 
 const NavItem = styled(NavLink)`
@@ -171,10 +180,19 @@ export default function Navbar() {
     ? `Joined: ${houses.map((h) => `House ${h.number}`).join(", ")}`
     : "No house joined";
 
+  const handleResize = () => {
+    if (window.innerWidth > 860) setOpen(false);
+  };
+
   const handleLogout = () => {
     logout();
     setOpen(false);
   };
+
+  useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <NavWrap>
@@ -191,7 +209,7 @@ export default function Navbar() {
           <NavItem to="/profile">Profile</NavItem>
           <NavItem to="/faq">FAQ</NavItem>
           <NavItem to="/dashboard">Dashboard</NavItem>
-          {user && <span style={{ color: "#5b6475", fontSize: "14px" }}>{houseLabel}</span>}
+          {user && <HouseLabel title={houseLabel}>{houseLabel}</HouseLabel>}
         </NavGroup>
         <Actions>
           {!user ? (
