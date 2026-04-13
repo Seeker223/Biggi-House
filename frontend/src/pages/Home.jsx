@@ -61,7 +61,7 @@ const ButtonRow = styled.div`
 `;
 
 const PrimaryButton = styled(Link)`
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   padding: 12px 20px;
   border-radius: 999px;
@@ -211,7 +211,7 @@ const HousesGrid = styled(Container)`
 `;
 
 const Highlight = styled.div`
-  background: linear-gradient(120deg, #1b4db6, #1441a8);
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 28px;

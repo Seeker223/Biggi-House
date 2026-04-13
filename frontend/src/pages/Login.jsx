@@ -59,7 +59,7 @@ const Button = styled.button`
   padding: 12px 16px;
   border-radius: 12px;
   border: none;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
   margin-top: 10px;

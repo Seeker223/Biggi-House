@@ -115,7 +115,7 @@ const PrimaryButton = styled.button`
   padding: 10px 16px;
   border-radius: 12px;
   border: none;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
   opacity: ${({ disabled }) => (disabled ? 0.7 : 1)};

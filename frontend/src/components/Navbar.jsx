@@ -80,7 +80,7 @@ const OutlineButton = styled(Link)`
 const SolidButton = styled(Link)`
   padding: 10px 18px;
   border-radius: 999px;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
   box-shadow: ${({ theme }) => theme.shadows.card};
@@ -138,7 +138,7 @@ const MobileButton = styled(Link)`
   padding: 12px 16px;
   border-radius: 12px;
   background: ${({ $variant, theme }) =>
-    $variant === "solid" ? theme.colors.primary : "transparent"};
+    $variant === "solid" ? theme.gradients.brand : "transparent"};
   color: ${({ $variant }) => ($variant === "solid" ? "#fff" : "inherit")};
   border: 1px solid
     ${({ $variant, theme }) =>

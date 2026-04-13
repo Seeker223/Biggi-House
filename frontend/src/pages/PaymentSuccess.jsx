@@ -62,7 +62,7 @@ const HistoryItem = styled.li`
 const PrimaryButton = styled(Link)`
   padding: 12px 18px;
   border-radius: 999px;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
 `;

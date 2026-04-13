@@ -1,7 +1,7 @@
 export const theme = {
   colors: {
-    primary: "#1b4db6",
-    primaryDark: "#0f2f78",
+    primary: "#3b82f6",
+    primaryDark: "#1d4ed8",
     accent: "#f59e0b",
     background: "#f5f8ff",
     surface: "#ffffff",
@@ -9,6 +9,10 @@ export const theme = {
     muted: "#5b6475",
     soft: "#e7eeff",
     border: "#e5e9f2",
+  },
+  gradients: {
+    brand: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+    brandSoft: "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(29, 78, 216, 0.12))",
   },
   shadows: {
     soft: "0 12px 35px rgba(15, 38, 107, 0.12)",

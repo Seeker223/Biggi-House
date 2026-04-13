@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
+import WalletCard from "../components/WalletCard";
 import { clearStoredHouses, getStoredHouses } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 
@@ -24,7 +25,7 @@ const Button = styled.button`
   padding: 10px 18px;
   border-radius: 999px;
   border: none;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
 `;
@@ -159,10 +160,7 @@ export default function Dashboard() {
       </Header>
 
       <Grid>
-        <Card>
-          <CardLabel>Wallet balance</CardLabel>
-          <CardValue>₦15,000</CardValue>
-        </Card>
+        <WalletCard />
         <Card>
           <CardLabel>Current house</CardLabel>
           <CardValue>
