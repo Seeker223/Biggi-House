@@ -28,7 +28,7 @@ const Main = styled.main`
 function App() {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const hideNav = ["/login", "/signup", "/forgot-password"].includes(
+  const hideNav = ["/login", "/signup", "/forgot-password", "/verify-email"].includes(
     location.pathname
   );
   if (loading) {
