@@ -14,6 +14,10 @@ import fintechMockup from "../assets/biggiHouse fintech platform interface.png";
 
 const HeroSection = styled.section`
   padding: 70px 0 40px;
+
+  @media (max-width: 640px) {
+    padding: 32px 0 28px;
+  }
 `;
 
 const HeroGrid = styled(Container)`
@@ -24,7 +28,12 @@ const HeroGrid = styled(Container)`
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
+    gap: 22px;
   }
+`;
+
+const HeroCopy = styled.div`
+  min-width: 0;
 `;
 
 const HeroCard = styled.div`
@@ -33,6 +42,11 @@ const HeroCard = styled.div`
   padding: 26px;
   box-shadow: ${({ theme }) => theme.shadows.soft};
   border: 1px solid ${({ theme }) => theme.colors.border};
+
+  @media (max-width: 640px) {
+    padding: 16px;
+    border-radius: 18px;
+  }
 `;
 
 const Mockup = styled.img`
@@ -47,6 +61,13 @@ const Title = styled.h1`
   line-height: 1.05;
   margin-bottom: 16px;
   letter-spacing: -1px;
+
+  @media (max-width: 640px) {
+    font-size: clamp(2rem, 9vw, 2.5rem);
+    line-height: 1.1;
+    margin-bottom: 14px;
+    text-align: center;
+  }
 `;
 
 const AnimatedTitle = styled(Title)`
@@ -55,6 +76,7 @@ const AnimatedTitle = styled(Title)`
   white-space: nowrap;
   border-right: 3px solid ${({ theme }) => theme.colors.primary};
   display: inline-block;
+  max-width: 100%;
   animation: typing 4.4s steps(25, end) 0.2s infinite,
     blink 0.9s step-end infinite;
 
@@ -79,12 +101,36 @@ const AnimatedTitle = styled(Title)`
       border-color: ${({ theme }) => theme.colors.primary};
     }
   }
+
+  @media (max-width: 640px) {
+    white-space: normal;
+    overflow: visible;
+    border-right: none;
+    display: block;
+    animation: fadeInText 1s ease both;
+
+    @keyframes fadeInText {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
 `;
 
 const Sub = styled.p`
   color: ${({ theme }) => theme.colors.muted};
   font-size: 1.05rem;
   margin-bottom: 18px;
+
+  @media (max-width: 640px) {
+    text-align: center;
+    font-size: 0.98rem;
+  }
 `;
 
 const PoweredBy = styled.div`
@@ -98,12 +144,24 @@ const PoweredBy = styled.div`
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 24px;
+
+  @media (max-width: 640px) {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 14px;
+  }
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
 `;
 
 const PrimaryButton = styled(Link)`
@@ -113,6 +171,11 @@ const PrimaryButton = styled(Link)`
   border-radius: 999px;
   font-weight: 600;
   box-shadow: ${({ theme }) => theme.shadows.card};
+  text-align: center;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
 `;
 
 const GhostButton = styled(Link)`
@@ -120,6 +183,11 @@ const GhostButton = styled(Link)`
   padding: 12px 20px;
   border-radius: 999px;
   font-weight: 600;
+  text-align: center;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
 `;
 
 const StatGrid = styled(Container)`
@@ -163,6 +231,10 @@ const Section = styled.section`
 const SectionTitle = styled.h2`
   font-size: 28px;
   margin-bottom: 10px;
+
+  @media (max-width: 640px) {
+    font-size: 24px;
+  }
 `;
 
 const SectionSub = styled.p`
@@ -269,6 +341,7 @@ const Highlight = styled.div`
   @media (max-width: 760px) {
     flex-direction: column;
     align-items: flex-start;
+    padding: 22px;
   }
 `;
 
@@ -377,11 +450,9 @@ export default function Home() {
     <>
       <HeroSection>
         <HeroGrid>
-          <div>
+          <HeroCopy>
             {user ? (
-              <div style={{ textAlign: "center" }}>
-                <AnimatedTitle>Welcome to Biggi House</AnimatedTitle>
-              </div>
+              <AnimatedTitle>Welcome to Biggi House</AnimatedTitle>
             ) : (
               <Title>Save together. Earn together.</Title>
             )}
@@ -396,7 +467,7 @@ export default function Home() {
               <PrimaryButton to="/houses">Join a House</PrimaryButton>
               <GhostButton to="/signup">Create Account</GhostButton>
             </ButtonRow>
-          </div>
+          </HeroCopy>
           <HeroCard>
             <Mockup
               src={fintechMockup}
@@ -408,7 +479,7 @@ export default function Home() {
         <StatGrid>
           {[
             { value: "10", label: "Houses live" },
-            { value: "₦4.2M", label: "Total payouts" },
+            { value: "\u20A64.2M", label: "Total payouts" },
             { value: "98%", label: "On-time payouts" },
             { value: "24/7", label: "Support coverage" },
           ].map((stat) => (
@@ -453,7 +524,9 @@ export default function Home() {
             </StepCard>
           ))}
         </StepsRow>
-        <TrustText>Secured payments · Powered by Flutterwave</TrustText>
+        <TrustText>
+          Secured payments {"\u00B7"} Powered by Flutterwave
+        </TrustText>
       </Section>
 
       <Section>

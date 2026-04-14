@@ -10,6 +10,11 @@ const Wrapper = styled(Container)`
   padding: 60px 0;
   display: flex;
   justify-content: center;
+
+  @media (max-width: 640px) {
+    padding: 24px 0 40px;
+    width: min(100%, 92%);
+  }
 `;
 
 const Card = styled.div`
@@ -19,17 +24,31 @@ const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   padding: 32px;
   box-shadow: ${({ theme }) => theme.shadows.soft};
+
+  @media (max-width: 640px) {
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
 `;
 
 const Logo = styled.img`
   width: 64px;
   height: 64px;
   margin-bottom: 10px;
+
+  @media (max-width: 640px) {
+    width: 56px;
+    height: 56px;
+  }
 `;
 
 const Title = styled.h1`
   font-size: 26px;
   margin-bottom: 8px;
+
+  @media (max-width: 640px) {
+    font-size: 22px;
+  }
 `;
 
 const Sub = styled.p`
@@ -49,10 +68,12 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
+  width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: #fdfdff;
+  font-size: 16px;
 `;
 
 const Button = styled.button`
@@ -72,6 +93,14 @@ const FooterText = styled.p`
   margin-top: 16px;
   text-align: center;
   color: ${({ theme }) => theme.colors.muted};
+`;
+
+const RememberRow = styled.label`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: ${({ theme }) => theme.colors.ink};
+  font-size: 14px;
 `;
 
 export default function Login() {
@@ -144,7 +173,7 @@ export default function Login() {
             />
           </Field>
           <Field style={{ marginBottom: "6px" }}>
-            <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <RememberRow>
               <input
                 type="checkbox"
                 name="rememberMe"
@@ -154,7 +183,7 @@ export default function Login() {
                 }
               />
               Remember me
-            </label>
+            </RememberRow>
           </Field>
           {error && (
             <p style={{ color: "#c02626", fontSize: "13px" }}>{error}</p>
