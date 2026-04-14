@@ -138,7 +138,7 @@ export default function Signup() {
     })
       .then((data) => {
         if (data.requiresVerification) {
-          setError("Registration successful. Please verify your email.");
+          navigate("/verify-email", { state: { email: data.email } });
           return;
         }
         login(data.user, data.token, data.refreshToken);

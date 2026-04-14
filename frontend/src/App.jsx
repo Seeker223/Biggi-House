@@ -10,6 +10,8 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import FAQ from "./pages/FAQ";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
 import { useAuth } from "./utils/AuthContext";
 
 const AppShell = styled.div`
@@ -48,6 +50,8 @@ function App() {
             element={user ? <Profile /> : <Navigate to="/login" replace />}
           />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/payment-success"
             element={user ? <PaymentSuccess /> : <Navigate to="/login" replace />}

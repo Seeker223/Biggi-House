@@ -27,7 +27,12 @@ export async function registerUser(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || data.message || "Registration failed");
+  if (!res.ok) {
+    const err = new Error(data.error || data.message || "Registration failed");
+    err.requiresVerification = data.requiresVerification;
+    err.email = data.email;
+    throw err;
+  }
   return data;
 }
 
@@ -38,7 +43,45 @@ export async function loginUser(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || data.message || "Login failed");
+  if (!res.ok) {
+    const err = new Error(data.error || data.message || "Login failed");
+    err.requiresVerification = data.requiresVerification;
+    err.email = data.email;
+    throw err;
+  }
+  return data;
+}
+
+export async function verifyEmailOtp(payload) {
+  const res = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || "Verification failed");
+  return data;
+}
+
+export async function resendVerification(payload) {
+  const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || "Resend failed");
+  return data;
+}
+
+export async function forgotPassword(payload) {
+  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || "Request failed");
   return data;
 }
 

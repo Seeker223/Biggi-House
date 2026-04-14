@@ -107,6 +107,10 @@ export default function Login() {
         navigate("/dashboard");
       })
       .catch(async (err) => {
+        if (err.requiresVerification) {
+          navigate("/verify-email", { state: { email: err.email } });
+          return;
+        }
         setError(err.message || "Invalid email or password.");
       })
       .finally(() => setLoading(false));
@@ -161,6 +165,9 @@ export default function Login() {
         </form>
         <FooterText>
           Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+        </FooterText>
+        <FooterText style={{ marginTop: "8px" }}>
+          <Link to="/forgot-password">Forgot password?</Link>
         </FooterText>
       </Card>
     </Wrapper>
