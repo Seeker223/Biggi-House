@@ -51,6 +51,19 @@ const Title = styled.h1`
 const Sub = styled.p`
   color: ${({ theme }) => theme.colors.muted};
   font-size: 1.05rem;
+  margin-bottom: 18px;
+`;
+
+const PoweredBy = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.soft};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 600;
+  font-size: 13px;
   margin-bottom: 24px;
 `;
 
@@ -331,11 +344,12 @@ export default function Home() {
       <HeroSection>
         <HeroGrid>
           <div>
-            <Title>Save together. Earn together.</Title>
+            <Title>Welcome to Biggi House</Title>
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,
               contribute weekly, and receive scheduled payouts transparently.
             </Sub>
+            <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
             <ButtonRow>
               <PrimaryButton to="/houses">Join a House</PrimaryButton>
               <GhostButton to="/signup">Create Account</GhostButton>
