@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../utils/AuthContext";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
@@ -337,6 +338,7 @@ const SocialChip = styled.span`
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const preview = houses.slice(0, 3);
 
   return (
@@ -344,12 +346,16 @@ export default function Home() {
       <HeroSection>
         <HeroGrid>
           <div>
-            <Title>Welcome to Biggi House</Title>
+            <Title>
+              {user ? "Welcome to Biggi House" : "Save together. Earn together."}
+            </Title>
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,
               contribute weekly, and receive scheduled payouts transparently.
             </Sub>
-            <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
+            {user && (
+              <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
+            )}
             <ButtonRow>
               <PrimaryButton to="/houses">Join a House</PrimaryButton>
               <GhostButton to="/signup">Create Account</GhostButton>
