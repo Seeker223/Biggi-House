@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -27,12 +27,16 @@ const Main = styled.main`
 
 function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const hideNav = ["/login", "/signup", "/forgot-password"].includes(
+    location.pathname
+  );
   if (loading) {
     return null;
   }
   return (
     <AppShell>
-      <Navbar />
+      {!hideNav && <Navbar />}
       <Main>
         <Routes>
           <Route path="/" element={<Home />} />

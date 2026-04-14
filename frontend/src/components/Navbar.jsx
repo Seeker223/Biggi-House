@@ -215,6 +215,7 @@ export default function Navbar() {
           {!user ? (
             <>
               <OutlineButton to="/login">Login</OutlineButton>
+              <OutlineButton to="/verify-email">Verify Email</OutlineButton>
               <SolidButton to="/signup">Get Started</SolidButton>
             </>
           ) : (
