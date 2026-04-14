@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import Container from "./Container";
 import biggiLogo from "../assets/biggiHouse2.png";
 import { getStoredHouses } from "../utils/auth";
@@ -175,6 +175,7 @@ const MobileLogout = styled.button`
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const houses = getStoredHouses();
   const houseLabel = houses.length
     ? `Joined: ${houses.map((h) => `House ${h.number}`).join(", ")}`
@@ -187,6 +188,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setOpen(false);
+    navigate("/");
   };
 
   useEffect(() => {

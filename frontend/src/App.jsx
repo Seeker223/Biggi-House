@@ -40,25 +40,28 @@ function App() {
       <Main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/houses" element={<Houses />} />
+          <Route
+            path="/houses"
+            element={user ? <Houses /> : <Navigate to="/" replace />}
+          />
           <Route
             path="/dashboard"
-            element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+            element={user ? <Dashboard /> : <Navigate to="/" replace />}
           />
           <Route
             path="/wallet"
-            element={user ? <Wallet /> : <Navigate to="/login" replace />}
+            element={user ? <Wallet /> : <Navigate to="/" replace />}
           />
           <Route
             path="/profile"
-            element={user ? <Profile /> : <Navigate to="/login" replace />}
+            element={user ? <Profile /> : <Navigate to="/" replace />}
           />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/payment-success"
-            element={user ? <PaymentSuccess /> : <Navigate to="/login" replace />}
+            element={user ? <PaymentSuccess /> : <Navigate to="/" replace />}
           />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
