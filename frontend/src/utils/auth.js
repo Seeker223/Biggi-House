@@ -21,6 +21,16 @@ export const clearAuthToken = () => {
   localStorage.removeItem("biggiToken");
 };
 
+export const getRefreshToken = () => localStorage.getItem("biggiRefreshToken");
+
+export const setRefreshToken = (token) => {
+  localStorage.setItem("biggiRefreshToken", token);
+};
+
+export const clearRefreshToken = () => {
+  localStorage.removeItem("biggiRefreshToken");
+};
+
 export const getStoredHouse = () => {
   try {
     const raw = localStorage.getItem("biggiHouse");

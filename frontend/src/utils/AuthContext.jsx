@@ -5,6 +5,8 @@ import {
   clearStoredUser,
   getAuthToken,
   getStoredUser,
+  setRefreshToken,
+  clearRefreshToken,
   setAuthToken,
 } from "./auth";
 import { getMe } from "../services/api";
@@ -33,19 +35,24 @@ export function AuthProvider({ children }) {
           localStorage.setItem("biggiUser", JSON.stringify(data.user));
           setUser(data.user);
         }
+        if (data?.refreshToken) {
+          setRefreshToken(data.refreshToken);
+        }
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const login = (data, token) => {
+  const login = (data, token, refreshToken) => {
     localStorage.setItem("biggiUser", JSON.stringify(data));
     if (token) setAuthToken(token);
+    if (refreshToken) setRefreshToken(refreshToken);
     setUser(data);
   };
 
   const logout = () => {
     clearStoredUser();
     clearAuthToken();
+    clearRefreshToken();
     clearStoredHouses();
     setUser(null);
   };

@@ -78,8 +78,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState({
-    email: "",
+    identifier: "",
     password: "",
+    rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -91,14 +92,18 @@ export default function Login() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
-    if (!form.email || !form.password) {
-      setError("Please enter email and password.");
+    if (!form.identifier || !form.password) {
+      setError("Please enter email/username and password.");
       return;
     }
     setLoading(true);
-    loginUser({ email: form.email, password: form.password })
+    loginUser({
+      email: form.identifier,
+      password: form.password,
+      rememberMe: form.rememberMe,
+    })
       .then((data) => {
-        login(data.user, data.token);
+        login(data.user, data.token, data.refreshToken);
         navigate("/dashboard");
       })
       .catch(async (err) => {
@@ -115,12 +120,12 @@ export default function Login() {
         <Sub>Sign in to continue your savings cycle.</Sub>
         <form onSubmit={handleSubmit}>
           <Field>
-            <Label>Email address</Label>
+            <Label>Email or username</Label>
             <Input
-              type="email"
-              name="email"
+              type="text"
+              name="identifier"
               placeholder="you@example.com"
-              value={form.email}
+              value={form.identifier}
               onChange={handleChange}
             />
           </Field>
@@ -133,6 +138,19 @@ export default function Login() {
               value={form.password}
               onChange={handleChange}
             />
+          </Field>
+          <Field style={{ marginBottom: "6px" }}>
+            <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={form.rememberMe}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, rememberMe: e.target.checked }))
+                }
+              />
+              Remember me
+            </label>
           </Field>
           {error && (
             <p style={{ color: "#c02626", fontSize: "13px" }}>{error}</p>

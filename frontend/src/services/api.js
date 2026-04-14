@@ -27,7 +27,7 @@ export async function registerUser(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Registration failed");
+  if (!res.ok) throw new Error(data.error || data.message || "Registration failed");
   return data;
 }
 
@@ -38,7 +38,7 @@ export async function loginUser(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Login failed");
+  if (!res.ok) throw new Error(data.error || data.message || "Login failed");
   return data;
 }
 

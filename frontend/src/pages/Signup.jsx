@@ -90,8 +90,15 @@ export default function Signup() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: "",
+    phoneNumber: "",
+    birthDate: "",
+    state: "",
+    nin: "",
+    bvn: "",
+    referralCode: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -103,18 +110,38 @@ export default function Signup() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
-    if (!form.firstName || !form.lastName || !form.email || !form.password) {
-      setError("Please complete all fields.");
+    if (
+      !form.username ||
+      !form.email ||
+      !form.password ||
+      !form.phoneNumber ||
+      !form.birthDate ||
+      !form.state ||
+      !form.nin
+    ) {
+      setError(
+        "Username, email, password, phone number, state, birth date, and NIN are required."
+      );
       return;
     }
     setLoading(true);
     registerUser({
-      name: `${form.firstName} ${form.lastName}`.trim(),
+      username: form.username,
       email: form.email,
       password: form.password,
+      phoneNumber: form.phoneNumber,
+      birthDate: form.birthDate,
+      state: form.state,
+      nin: form.nin,
+      bvn: form.bvn || undefined,
+      referralCode: form.referralCode || undefined,
     })
       .then((data) => {
-        login(data.user, data.token);
+        if (data.requiresVerification) {
+          setError("Registration successful. Please verify your email.");
+          return;
+        }
+        login(data.user, data.token, data.refreshToken);
         navigate("/dashboard");
       })
       .catch((err) => {
@@ -130,46 +157,113 @@ export default function Signup() {
         <Title>Create your account</Title>
         <Sub>Start your savings journey with BiggiHouse.</Sub>
         <form onSubmit={handleSubmit}>
-          <Row>
-            <Field>
-              <Label>First name</Label>
-              <Input
-                name="firstName"
-                placeholder="Ada"
-                value={form.firstName}
-                onChange={handleChange}
-              />
-            </Field>
-            <Field>
-              <Label>Last name</Label>
-              <Input
-                name="lastName"
-                placeholder="Obi"
-                value={form.lastName}
-                onChange={handleChange}
-              />
-            </Field>
-          </Row>
+        <Row>
           <Field>
-            <Label>Email address</Label>
+            <Label>First name</Label>
             <Input
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              value={form.email}
+              name="firstName"
+              placeholder="Ada"
+              value={form.firstName}
               onChange={handleChange}
             />
           </Field>
           <Field>
-            <Label>Password</Label>
+            <Label>Last name</Label>
             <Input
-              type="password"
-              name="password"
-              placeholder="Create password"
-              value={form.password}
+              name="lastName"
+              placeholder="Obi"
+              value={form.lastName}
               onChange={handleChange}
             />
           </Field>
+        </Row>
+        <Field>
+          <Label>Username</Label>
+          <Input
+            name="username"
+            placeholder="biggi_user"
+            value={form.username}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field>
+          <Label>Email address</Label>
+          <Input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field>
+          <Label>Phone number</Label>
+          <Input
+            name="phoneNumber"
+            placeholder="08012345678"
+            value={form.phoneNumber}
+            onChange={handleChange}
+          />
+        </Field>
+        <Row>
+          <Field>
+            <Label>State</Label>
+            <Input
+              name="state"
+              placeholder="Lagos"
+              value={form.state}
+              onChange={handleChange}
+            />
+          </Field>
+          <Field>
+            <Label>Birth date</Label>
+            <Input
+              type="date"
+              name="birthDate"
+              value={form.birthDate}
+              onChange={handleChange}
+            />
+          </Field>
+        </Row>
+        <Row>
+          <Field>
+            <Label>NIN</Label>
+            <Input
+              name="nin"
+              placeholder="11-digit NIN"
+              value={form.nin}
+              onChange={handleChange}
+            />
+          </Field>
+          <Field>
+            <Label>BVN (optional)</Label>
+            <Input
+              name="bvn"
+              placeholder="11-digit BVN"
+              value={form.bvn}
+              onChange={handleChange}
+            />
+          </Field>
+        </Row>
+        <Field>
+          <Label>Referral code (optional)</Label>
+          <Input
+            name="referralCode"
+            placeholder="BIGGI1234"
+            value={form.referralCode}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field>
+          <Label>Password</Label>
+          <Input
+            type="password"
+            name="password"
+            placeholder="Create password"
+            value={form.password}
+            onChange={handleChange}
+          />
+        </Field>
           {error && (
             <p style={{ color: "#c02626", fontSize: "13px" }}>{error}</p>
           )}
