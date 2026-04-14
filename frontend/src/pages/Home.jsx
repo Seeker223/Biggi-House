@@ -55,14 +55,14 @@ const AnimatedTitle = styled(Title)`
   white-space: nowrap;
   border-right: 3px solid ${({ theme }) => theme.colors.primary};
   display: inline-block;
-  animation: typing 2.8s steps(24, end) 0.2s infinite,
-    blink 0.8s step-end infinite;
+  animation: typing 4.4s steps(25, end) 0.2s infinite,
+    blink 0.9s step-end infinite;
 
   @keyframes typing {
     0% {
       width: 0;
     }
-    50% {
+    55% {
       width: 100%;
     }
     100% {
