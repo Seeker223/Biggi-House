@@ -482,6 +482,9 @@ export default function Home() {
           <FooterBrand>
             <FooterLogo>biggiHouse</FooterLogo>
             <p>Your trusted savings platform.</p>
+            <p style={{ color: "#3b82f6", fontWeight: 600 }}>
+              Powered by Biggi Data bundles services
+            </p>
           </FooterBrand>
           <FooterLinks>
             <Link to="#">Terms</Link>
