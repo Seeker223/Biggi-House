@@ -1,5 +1,7 @@
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  (import.meta.env.VITE_BASE_URL
+    ? `${import.meta.env.VITE_BASE_URL}/api/v1`
+    : null) || "http://localhost:5000/api/v1";
 
 export async function getHouses() {
   const res = await fetch(`${API_BASE}/houses`);
