@@ -47,6 +47,22 @@ export function AuthProvider({ children }) {
     if (token) setAuthToken(token);
     if (refreshToken) setRefreshToken(refreshToken);
     setUser(data);
+
+    if (token) {
+      getMe(token)
+        .then((response) => {
+          if (response?.user) {
+            localStorage.setItem("biggiUser", JSON.stringify(response.user));
+            setUser(response.user);
+          }
+          if (response?.refreshToken) {
+            setRefreshToken(response.refreshToken);
+          }
+        })
+        .catch(() => {
+          // Keep the initial auth payload if the richer profile fetch fails.
+        });
+    }
   };
 
   const logout = () => {
