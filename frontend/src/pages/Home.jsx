@@ -49,6 +49,35 @@ const Title = styled.h1`
   letter-spacing: -1px;
 `;
 
+const AnimatedTitle = styled(Title)`
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 3px solid ${({ theme }) => theme.colors.primary};
+  display: inline-block;
+  animation: typing 2.8s steps(24, end) 0.2s both,
+    blink 0.8s step-end infinite;
+
+  @keyframes typing {
+    0% {
+      width: 0;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      border-color: transparent;
+    }
+    50% {
+      border-color: ${({ theme }) => theme.colors.primary};
+    }
+  }
+`;
+
 const Sub = styled.p`
   color: ${({ theme }) => theme.colors.muted};
   font-size: 1.05rem;
@@ -346,9 +375,11 @@ export default function Home() {
       <HeroSection>
         <HeroGrid>
           <div>
-            <Title>
-              {user ? "Welcome to Biggi House" : "Save together. Earn together."}
-            </Title>
+            {user ? (
+              <AnimatedTitle>Welcome to Biggi House</AnimatedTitle>
+            ) : (
+              <Title>Save together. Earn together.</Title>
+            )}
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,
               contribute weekly, and receive scheduled payouts transparently.
