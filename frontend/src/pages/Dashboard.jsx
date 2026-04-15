@@ -6,8 +6,7 @@ import {
   clearStoredHouses,
   getStoredHouses,
   getStoredTransactions,
-  getEffectiveWalletBalance,
-  getUserWalletBalance,
+  getBiggiHouseWalletBalance,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 
@@ -128,9 +127,10 @@ const ActivityItem = styled.li`
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const houses = getStoredHouses();
-  const transactions = getStoredTransactions();
-  const walletBalance = getEffectiveWalletBalance(user);
+  const userId = user?.id || user?._id || user?.userId;
+  const houses = getStoredHouses(userId);
+  const transactions = getStoredTransactions(userId);
+  const walletBalance = getBiggiHouseWalletBalance(userId);
   const latestHouse = houses[houses.length - 1];
   const latestJoin = transactions.find((item) => item.type === "house-join");
   const recentActivity =
@@ -159,7 +159,7 @@ export default function Dashboard() {
   };
 
   const handleLeaveHouse = () => {
-    clearStoredHouses();
+    clearStoredHouses(userId);
     navigate("/houses");
   };
 

@@ -7,10 +7,10 @@ import { houses } from "../data/houses";
 import {
   addStoredHouse,
   addStoredTransaction,
+  getBiggiHouseWalletBalance,
+  setBiggiHouseWalletBalance,
   getAuthToken,
   getStoredHouses,
-  getEffectiveWalletBalance,
-  getUserWalletBalance,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import { getHouses, joinHouse } from "../services/api";
@@ -133,6 +133,7 @@ const PrimaryButton = styled.button`
 export default function Houses() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const userId = user?.id || user?._id || user?.userId;
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
   const [list, setList] = useState(houses);
@@ -174,8 +175,8 @@ export default function Houses() {
       .finally(() => setLoadingList(false));
   }, []);
 
-  const currentHouses = getStoredHouses();
-  const walletBalance = getEffectiveWalletBalance(user);
+  const currentHouses = getStoredHouses(userId);
+  const walletBalance = getBiggiHouseWalletBalance(userId);
 
   const handleJoin = (house) => {
     if (!user) {
@@ -193,7 +194,7 @@ export default function Houses() {
 
   const applyLocalJoin = (house, options = {}) => {
     const { useRemoteState = false } = options;
-    const previousBalance = getEffectiveWalletBalance(user);
+    const previousBalance = getBiggiHouseWalletBalance(userId);
     const contribution = Number(house.minimum || 0);
     const nextBalance = previousBalance - contribution;
 
@@ -215,13 +216,17 @@ export default function Houses() {
       )
     );
 
-    addStoredHouse({
+    addStoredHouse(
+      {
       id: house.id,
       number: house.number,
       minimum: contribution,
-    });
+      },
+      userId
+    );
 
-    addStoredTransaction({
+    addStoredTransaction(
+      {
       id: `house-join-${house.id}-${Date.now()}`,
       type: "house-join",
       label: `House ${house.number} contribution`,
@@ -231,7 +236,11 @@ export default function Houses() {
       currentBalance: nextBalance,
       variant: "blue",
       createdAt: new Date().toISOString(),
-    });
+      },
+      userId
+    );
+
+    setBiggiHouseWalletBalance(userId, nextBalance);
 
     setSuccess(`You joined House ${house.number} successfully.`);
     setSelected(null);

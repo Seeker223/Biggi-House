@@ -68,11 +68,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    const userId = user?.id || user?._id || user?.userId;
     clearStoredUser();
     clearAuthToken();
     clearRefreshToken();
-    clearStoredHouses();
-    clearStoredTransactions();
+    clearStoredHouses(userId);
+    clearStoredTransactions(userId);
     setUser(null);
   };
 

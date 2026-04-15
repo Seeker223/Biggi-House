@@ -15,6 +15,17 @@ export const setStoredUser = (user) => {
   localStorage.setItem("biggiUser", JSON.stringify(user));
 };
 
+const resolveUserId = (userOrId) => {
+  if (!userOrId) return "";
+  if (typeof userOrId === "string") return userOrId;
+  return String(userOrId.id || userOrId._id || userOrId.userId || "");
+};
+
+const scopedKey = (base, userOrId) => {
+  const userId = resolveUserId(userOrId);
+  return userId ? `${base}:${userId}` : base;
+};
+
 export const getAuthToken = () => localStorage.getItem("biggiToken");
 
 export const setAuthToken = (token) => {
@@ -48,117 +59,93 @@ export const setStoredHouse = (house) => {
   localStorage.setItem("biggiHouse", JSON.stringify(house));
 };
 
-export const getStoredHouses = () => {
+export const getStoredHouses = (userOrId) => {
+  const key = scopedKey("biggiHouseHouses", userOrId);
   try {
-    const raw = localStorage.getItem("biggiHouses");
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+
+    // Legacy fallback (unscoped).
+    const legacyRaw = localStorage.getItem("biggiHouses");
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      if (Array.isArray(legacy) && resolveUserId(userOrId)) {
+        localStorage.setItem(key, JSON.stringify(legacy));
+        localStorage.removeItem("biggiHouses");
+      }
+      return Array.isArray(legacy) ? legacy : [];
+    }
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 };
 
-export const addStoredHouse = (house) => {
-  const houses = getStoredHouses();
+export const addStoredHouse = (house, userOrId) => {
+  const key = scopedKey("biggiHouseHouses", userOrId);
+  const houses = getStoredHouses(userOrId);
   const exists = houses.find((item) => item.id === house.id);
   if (!exists) {
     houses.push(house);
-    localStorage.setItem("biggiHouses", JSON.stringify(houses));
+    localStorage.setItem(key, JSON.stringify(houses));
   }
 };
 
-export const clearStoredHouses = () => {
-  localStorage.removeItem("biggiHouses");
+export const clearStoredHouses = (userOrId) => {
+  localStorage.removeItem(scopedKey("biggiHouseHouses", userOrId));
 };
 
-export const getStoredTransactions = () => {
+export const getStoredTransactions = (userOrId) => {
+  const key = scopedKey("biggiHouseTransactions", userOrId);
   try {
-    const raw = localStorage.getItem("biggiTransactions");
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+
+    // Legacy fallback (unscoped).
+    const legacyRaw = localStorage.getItem("biggiTransactions");
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      if (Array.isArray(legacy) && resolveUserId(userOrId)) {
+        localStorage.setItem(key, JSON.stringify(legacy));
+        localStorage.removeItem("biggiTransactions");
+      }
+      return Array.isArray(legacy) ? legacy : [];
+    }
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 };
 
-export const addStoredTransaction = (transaction) => {
-  const transactions = getStoredTransactions();
+export const addStoredTransaction = (transaction, userOrId) => {
+  const key = scopedKey("biggiHouseTransactions", userOrId);
+  const transactions = getStoredTransactions(userOrId);
   transactions.unshift(transaction);
   localStorage.setItem(
-    "biggiTransactions",
-    JSON.stringify(transactions.slice(0, 20))
+    key,
+    JSON.stringify(transactions.slice(0, 50))
   );
 };
 
-export const clearStoredTransactions = () => {
-  localStorage.removeItem("biggiTransactions");
+export const clearStoredTransactions = (userOrId) => {
+  localStorage.removeItem(scopedKey("biggiHouseTransactions", userOrId));
 };
 
-export const getUserWalletBalance = (user) => {
-  if (!user) return 0;
-
-  const candidates = [
-    user.mainBalance,
-    user.walletBalance,
-    user.balance,
-    user.accountBalance,
-    user.wallet?.balance,
-    user.wallet?.mainBalance,
-  ];
-
-  const value = candidates.find(
-    (item) => item !== undefined && item !== null && !Number.isNaN(Number(item))
-  );
-
-  return Number(value ?? 0);
+export const getBiggiHouseWalletBalance = (userOrId) => {
+  const key = scopedKey("biggiHouseWalletBalance", userOrId);
+  const raw = localStorage.getItem(key);
+  const parsed = raw === null ? 0 : Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const updateUserWalletBalance = (user, nextBalance) => {
-  if (!user) return user;
-
-  const normalizedBalance = Number(nextBalance || 0);
-  const nextUser = { ...user };
-
-  if ("mainBalance" in nextUser || !("walletBalance" in nextUser)) {
-    nextUser.mainBalance = normalizedBalance;
-  }
-
-  if ("walletBalance" in nextUser) {
-    nextUser.walletBalance = normalizedBalance;
-  }
-
-  if ("balance" in nextUser) {
-    nextUser.balance = normalizedBalance;
-  }
-
-  if ("accountBalance" in nextUser) {
-    nextUser.accountBalance = normalizedBalance;
-  }
-
-  if (nextUser.wallet && typeof nextUser.wallet === "object") {
-    nextUser.wallet = {
-      ...nextUser.wallet,
-      balance:
-        nextUser.wallet.balance !== undefined
-          ? normalizedBalance
-          : nextUser.wallet.balance,
-      mainBalance:
-        nextUser.wallet.mainBalance !== undefined
-          ? normalizedBalance
-          : nextUser.wallet.mainBalance,
-    };
-  }
-
-  return nextUser;
+export const setBiggiHouseWalletBalance = (userOrId, nextBalance) => {
+  const key = scopedKey("biggiHouseWalletBalance", userOrId);
+  const normalized = Math.max(0, Number(nextBalance || 0));
+  localStorage.setItem(key, String(normalized));
+  return normalized;
 };
 
-export const getHouseReservedBalance = () => {
-  const transactions = getStoredTransactions();
-  return transactions
-    .filter((item) => item?.type === "house-join")
-    .reduce((sum, item) => sum + Number(item?.amount || 0), 0);
-};
-
-export const getEffectiveWalletBalance = (user) => {
-  const main = getUserWalletBalance(user);
-  const reserved = getHouseReservedBalance();
-  return Math.max(0, Number(main || 0) - Number(reserved || 0));
+export const adjustBiggiHouseWalletBalance = (userOrId, delta) => {
+  const current = getBiggiHouseWalletBalance(userOrId);
+  return setBiggiHouseWalletBalance(userOrId, current + Number(delta || 0));
 };

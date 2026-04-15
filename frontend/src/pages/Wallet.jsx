@@ -5,8 +5,9 @@ import { useAuth } from "../utils/AuthContext";
 import {
   getStoredHouses,
   getStoredTransactions,
-  getEffectiveWalletBalance,
-  getUserWalletBalance,
+  addStoredTransaction,
+  getBiggiHouseWalletBalance,
+  setBiggiHouseWalletBalance,
 } from "../utils/auth";
 
 const Wrapper = styled.div`
@@ -156,9 +157,10 @@ const formatCurrency = (value) =>
 
 export default function Wallet() {
   const { user } = useAuth();
-  const houses = getStoredHouses();
-  const transactions = getStoredTransactions();
-  const walletBalance = getEffectiveWalletBalance(user);
+  const userId = user?.id || user?._id || user?.userId;
+  const houses = getStoredHouses(userId);
+  const transactions = getStoredTransactions(userId);
+  const walletBalance = getBiggiHouseWalletBalance(userId);
   const latestHouse = houses[houses.length - 1];
   const currentHouse = latestHouse ? `House ${latestHouse.number}` : "Not joined";
   const latestJoin = transactions.find((item) => item.type === "house-join");
@@ -206,8 +208,63 @@ export default function Wallet() {
               lastBalance={latestJoin?.previousBalance ?? walletBalance}
             />
             <Actions>
-              <PrimaryButton>Deposit</PrimaryButton>
-              <GhostButton>Withdraw</GhostButton>
+              <PrimaryButton
+                onClick={() => {
+                  const input = window.prompt("Enter deposit amount (NGN):", "1000");
+                  const amount = Number(input || 0);
+                  if (!Number.isFinite(amount) || amount <= 0) return;
+                  const previousBalance = getBiggiHouseWalletBalance(userId);
+                  const nextBalance = setBiggiHouseWalletBalance(
+                    userId,
+                    previousBalance + amount
+                  );
+                  addStoredTransaction(
+                    {
+                      id: `deposit-${Date.now()}`,
+                      type: "deposit",
+                      label: "Deposit",
+                      note: "Wallet top-up",
+                      amount,
+                      previousBalance,
+                      currentBalance: nextBalance,
+                      variant: "green",
+                      createdAt: new Date().toISOString(),
+                    },
+                    userId
+                  );
+                }}
+              >
+                Deposit
+              </PrimaryButton>
+              <GhostButton
+                onClick={() => {
+                  const input = window.prompt("Enter withdraw amount (NGN):", "1000");
+                  const amount = Number(input || 0);
+                  if (!Number.isFinite(amount) || amount <= 0) return;
+                  const previousBalance = getBiggiHouseWalletBalance(userId);
+                  if (amount > previousBalance) return;
+                  const nextBalance = setBiggiHouseWalletBalance(
+                    userId,
+                    previousBalance - amount
+                  );
+                  addStoredTransaction(
+                    {
+                      id: `withdraw-${Date.now()}`,
+                      type: "withdraw",
+                      label: "Withdraw",
+                      note: "Wallet withdrawal",
+                      amount,
+                      previousBalance,
+                      currentBalance: nextBalance,
+                      variant: "blue",
+                      createdAt: new Date().toISOString(),
+                    },
+                    userId
+                  );
+                }}
+              >
+                Withdraw
+              </GhostButton>
             </Actions>
           </div>
           <ActivityPanel>

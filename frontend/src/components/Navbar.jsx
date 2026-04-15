@@ -176,7 +176,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const houses = getStoredHouses();
+  const userId = user?.id || user?._id || user?.userId;
+  const houses = getStoredHouses(userId);
   const houseLabel = houses.length
     ? `Joined: ${houses.map((h) => `House ${h.number}`).join(", ")}`
     : "No house joined";

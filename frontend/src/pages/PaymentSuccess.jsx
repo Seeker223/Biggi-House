@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Container from "../components/Container";
 import { WalletIcon, PayoutIcon } from "../components/Icons";
 import { getStoredHouses, getStoredTransactions } from "../utils/auth";
+import { useAuth } from "../utils/AuthContext";
 
 const Wrapper = styled(Container)`
   padding: 70px 0;
@@ -76,8 +77,10 @@ const GhostButton = styled(Link)`
 `;
 
 export default function PaymentSuccess() {
-  const houses = getStoredHouses();
-  const transactions = getStoredTransactions();
+  const { user } = useAuth();
+  const userId = user?.id || user?._id || user?.userId;
+  const houses = getStoredHouses(userId);
+  const transactions = getStoredTransactions(userId);
   const latestHouse = houses[houses.length - 1];
   const latestJoin = transactions.find((item) => item.type === "house-join");
 

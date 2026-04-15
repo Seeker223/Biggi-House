@@ -154,7 +154,8 @@ const DetailValue = styled.span`
 
 export default function Profile() {
   const { user } = useAuth();
-  const houses = getStoredHouses();
+  const userId = user?.id || user?._id || user?.userId;
+  const houses = getStoredHouses(userId);
   const displayName = user?.name || user?.username || "Member";
   const initials =
     displayName
