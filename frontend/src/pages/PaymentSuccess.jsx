@@ -1,9 +1,11 @@
 import styled from "styled-components";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Container from "../components/Container";
 import { WalletIcon, PayoutIcon } from "../components/Icons";
-import { getStoredHouses, getStoredTransactions } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
+import { getAuthToken } from "../utils/auth";
+import { getBiggiHouseMemberships, getBiggiHouseWallet } from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 70px 0;
@@ -78,11 +80,22 @@ const GhostButton = styled(Link)`
 
 export default function PaymentSuccess() {
   const { user } = useAuth();
-  const userId = user?.id || user?._id || user?.userId;
-  const houses = getStoredHouses(userId);
-  const transactions = getStoredTransactions(userId);
-  const latestHouse = houses[houses.length - 1];
-  const latestJoin = transactions.find((item) => item.type === "house-join");
+  const [wallet, setWallet] = useState(null);
+  const [memberships, setMemberships] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    Promise.all([
+      getBiggiHouseWallet(token).then((data) => setWallet(data)),
+      getBiggiHouseMemberships(token).then((data) => setMemberships(data || [])),
+    ]).catch((err) => setError(err?.message || "Unable to load payment details."));
+  }, []);
+
+  const latestHouse = memberships[0]?.house || null;
+  const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
 
   return (
     <Wrapper>
@@ -107,14 +120,18 @@ export default function PaymentSuccess() {
           <HistoryItem>
             <span>House</span>
             <strong>
-              {latestHouse ? `House ${latestHouse.number}` : "Not selected"}
+              {latestJoin?.meta?.houseNumber
+                ? `House ${latestJoin.meta.houseNumber}`
+                : latestHouse
+                ? `House ${latestHouse.number}`
+                : "Not selected"}
             </strong>
           </HistoryItem>
           <HistoryItem>
             <span>Wallet balance</span>
             <strong>
               {"\u20A6"}
-              {Number(latestJoin?.currentBalance ?? 0).toLocaleString()}
+              {Number(wallet?.balance ?? latestJoin?.meta?.newBalance ?? 0).toLocaleString()}
             </strong>
           </HistoryItem>
           <HistoryItem>
@@ -122,6 +139,7 @@ export default function PaymentSuccess() {
             <strong>Paid</strong>
           </HistoryItem>
         </History>
+        {error && <Text style={{ color: "#c02626" }}>{error}</Text>}
         <Actions>
           <PrimaryButton to="/dashboard">Go to dashboard</PrimaryButton>
           <GhostButton to="/houses">Explore houses</GhostButton>

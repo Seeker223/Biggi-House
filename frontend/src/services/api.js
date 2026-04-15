@@ -4,6 +4,7 @@ const API_BASE =
     : null) || "http://localhost:5000/api/v1";
 
 export async function getHouses() {
+  // Legacy helper retained for older backends; BiggiHouse now uses /biggihouse/houses.
   const res = await fetch(`${API_BASE}/houses`);
   if (!res.ok) throw new Error("Failed to fetch houses");
   const data = await res.json();
@@ -11,6 +12,7 @@ export async function getHouses() {
 }
 
 export async function joinHouse(id, token) {
+  // Legacy helper retained for older backends; BiggiHouse now uses /biggihouse/houses/:id/join.
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}/houses/${id}/join`, {
@@ -22,10 +24,114 @@ export async function joinHouse(id, token) {
   return data.house;
 }
 
+export async function getBiggiHouseHouses(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/houses`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || data.message || "Failed to fetch houses");
+    err.code = data.errorCode;
+    throw err;
+  }
+  return data.houses || [];
+}
+
+export async function joinBiggiHouseHouse(id, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/houses/${id}/join`, {
+    method: "POST",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || data.message || "Failed to join house");
+    err.code = data.errorCode;
+    throw err;
+  }
+  return data;
+}
+
+export async function getBiggiHouseWallet(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load wallet");
+  return data.wallet;
+}
+
+export async function depositBiggiHouseWallet(amount, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet/deposit`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Deposit failed");
+  return data;
+}
+
+export async function withdrawBiggiHouseWallet(amount, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet/withdraw`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Withdraw failed");
+  return data;
+}
+
+export async function getBiggiHouseEligibility(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/eligibility`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Eligibility check failed");
+  return data;
+}
+
+export async function getBiggiHouseMemberships(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/memberships`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load memberships");
+  return data.memberships || [];
+}
+
+export async function getBiggiHouseVendors(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/vendors`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load vendors");
+  return data.vendors || [];
+}
+
+export async function createBiggiHouseVendorRequest(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/vendor-requests`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Request failed");
+  return data.request;
+}
+
 export async function registerUser(payload) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Client-App": "biggi-house" },
     body: JSON.stringify(payload),
   });
   const data = await res.json();
@@ -41,7 +147,7 @@ export async function registerUser(payload) {
 export async function loginUser(payload) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Client-App": "biggi-house" },
     body: JSON.stringify(payload),
   });
   const data = await res.json();
@@ -89,7 +195,7 @@ export async function forgotPassword(payload) {
 
 export async function getMe(token) {
   const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, "X-Client-App": "biggi-house" },
   });
   if (!res.ok) throw new Error("Unauthorized");
   return res.json();

@@ -1,14 +1,14 @@
 import styled from "styled-components";
+import { useEffect, useState } from "react";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
 import { useAuth } from "../utils/AuthContext";
+import { getAuthToken } from "../utils/auth";
 import {
-  getStoredHouses,
-  getStoredTransactions,
-  addStoredTransaction,
-  getBiggiHouseWalletBalance,
-  setBiggiHouseWalletBalance,
-} from "../utils/auth";
+  depositBiggiHouseWallet,
+  getBiggiHouseWallet,
+  withdrawBiggiHouseWallet,
+} from "../services/api";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -158,31 +158,40 @@ const formatCurrency = (value) =>
 export default function Wallet() {
   const { user } = useAuth();
   const userId = user?.id || user?._id || user?.userId;
-  const houses = getStoredHouses(userId);
-  const transactions = getStoredTransactions(userId);
-  const walletBalance = getBiggiHouseWalletBalance(userId);
-  const latestHouse = houses[houses.length - 1];
-  const currentHouse = latestHouse ? `House ${latestHouse.number}` : "Not joined";
-  const latestJoin = transactions.find((item) => item.type === "house-join");
-  const recentTransactions =
-    transactions.length > 0
-      ? transactions.slice(0, 4)
-      : [
-          {
-            id: "reward",
-            label: "Quick Receive",
-            note: "Investment",
-            amount: user?.rewardBalance ?? 0,
-            variant: "green",
-          },
-          {
-            id: "wallet",
-            label: "Course House",
-            note: currentHouse,
-            amount: walletBalance,
-            variant: "blue",
-          },
-        ];
+  const [wallet, setWallet] = useState(null);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoadingWallet(true);
+    getBiggiHouseWallet(token)
+      .then((data) => setWallet(data))
+      .catch((err) => setError(err?.message || "Unable to load wallet."))
+      .finally(() => setLoadingWallet(false));
+  }, []);
+
+  const walletBalance = Number(wallet?.balance || 0);
+  const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
+  const recentTransactions = (wallet?.transactions || []).slice(0, 4).map((item) => ({
+    id: item._id || item.reference || String(item.date || Date.now()),
+    label:
+      item.type === "deposit"
+        ? "Deposit"
+        : item.type === "withdraw"
+        ? "Withdraw"
+        : "House Contribution",
+    note:
+      item.type === "house_join"
+        ? `House ${item?.meta?.houseNumber || ""}`.trim()
+        : item.type === "deposit"
+        ? "Wallet top-up"
+        : "Wallet withdrawal",
+    amount: Number(item.amount || 0),
+    variant: item.type === "deposit" ? "green" : "blue",
+  }));
 
   return (
     <Wrapper>
@@ -204,8 +213,8 @@ export default function Wallet() {
           <div>
             <WalletCard
               balance={walletBalance}
-              currentHouse={currentHouse}
-              lastBalance={latestJoin?.previousBalance ?? walletBalance}
+              currentHouse={latestJoin?.meta?.houseNumber ? `House ${latestJoin.meta.houseNumber}` : "Not joined"}
+              lastBalance={latestJoin?.meta?.previousBalance ?? walletBalance}
             />
             <Actions>
               <PrimaryButton
@@ -213,25 +222,12 @@ export default function Wallet() {
                   const input = window.prompt("Enter deposit amount (NGN):", "1000");
                   const amount = Number(input || 0);
                   if (!Number.isFinite(amount) || amount <= 0) return;
-                  const previousBalance = getBiggiHouseWalletBalance(userId);
-                  const nextBalance = setBiggiHouseWalletBalance(
-                    userId,
-                    previousBalance + amount
-                  );
-                  addStoredTransaction(
-                    {
-                      id: `deposit-${Date.now()}`,
-                      type: "deposit",
-                      label: "Deposit",
-                      note: "Wallet top-up",
-                      amount,
-                      previousBalance,
-                      currentBalance: nextBalance,
-                      variant: "green",
-                      createdAt: new Date().toISOString(),
-                    },
-                    userId
-                  );
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  depositBiggiHouseWallet(amount, token)
+                    .then(() => getBiggiHouseWallet(token).then((data) => setWallet(data)))
+                    .catch((err) => setError(err?.message || "Deposit failed."));
                 }}
               >
                 Deposit
@@ -241,35 +237,26 @@ export default function Wallet() {
                   const input = window.prompt("Enter withdraw amount (NGN):", "1000");
                   const amount = Number(input || 0);
                   if (!Number.isFinite(amount) || amount <= 0) return;
-                  const previousBalance = getBiggiHouseWalletBalance(userId);
-                  if (amount > previousBalance) return;
-                  const nextBalance = setBiggiHouseWalletBalance(
-                    userId,
-                    previousBalance - amount
-                  );
-                  addStoredTransaction(
-                    {
-                      id: `withdraw-${Date.now()}`,
-                      type: "withdraw",
-                      label: "Withdraw",
-                      note: "Wallet withdrawal",
-                      amount,
-                      previousBalance,
-                      currentBalance: nextBalance,
-                      variant: "blue",
-                      createdAt: new Date().toISOString(),
-                    },
-                    userId
-                  );
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  withdrawBiggiHouseWallet(amount, token)
+                    .then(() => getBiggiHouseWallet(token).then((data) => setWallet(data)))
+                    .catch((err) => setError(err?.message || "Withdraw failed."));
                 }}
               >
                 Withdraw
               </GhostButton>
             </Actions>
+            {loadingWallet && (
+              <p style={{ marginTop: "8px", color: "#5b6475" }}>Loading wallet...</p>
+            )}
+            {error && <p style={{ marginTop: "8px", color: "#c02626" }}>{error}</p>}
           </div>
           <ActivityPanel>
             <ActivityTitle>Recent Activity</ActivityTitle>
-            {recentTransactions.map((item) => (
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((item) => (
               <ActivityItem key={item.id}>
                 <ItemLeft>
                   <IconCircle $variant={item.variant || "blue"} aria-hidden="true">
@@ -301,7 +288,10 @@ export default function Wallet() {
                 </ItemLeft>
                 <ItemValue>{formatCurrency(item.amount)}</ItemValue>
               </ActivityItem>
-            ))}
+              ))
+            ) : (
+              <p style={{ color: "#5b6475" }}>No transactions yet.</p>
+            )}
           </ActivityPanel>
         </Layout>
       </Phone>

@@ -4,16 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
-import {
-  addStoredHouse,
-  addStoredTransaction,
-  getBiggiHouseWalletBalance,
-  setBiggiHouseWalletBalance,
-  getAuthToken,
-  getStoredHouses,
-} from "../utils/auth";
+import { getAuthToken } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
-import { getHouses, joinHouse } from "../services/api";
+import {
+  getBiggiHouseHouses,
+  getBiggiHouseMemberships,
+  getBiggiHouseWallet,
+  joinBiggiHouseHouse,
+} from "../services/api";
 
 const PageHeader = styled.div`
   padding: 40px 0 12px;
@@ -142,6 +140,8 @@ export default function Houses() {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [memberships, setMemberships] = useState([]);
 
   const filtered = useMemo(() => {
     let result = [...list];
@@ -165,86 +165,39 @@ export default function Houses() {
 
   useEffect(() => {
     setLoadingList(true);
-    getHouses()
-      .then((data) => {
+    const token = getAuthToken();
+
+    Promise.all([
+      getBiggiHouseHouses(token).then((data) => {
         if (data.length) setList(data);
-      })
-      .catch(() => {
-        // Shared backend may not expose house endpoints; keep local catalog without alarming users.
+      }),
+      getBiggiHouseWallet(token).then((wallet) => {
+        setWalletBalance(Number(wallet?.balance || 0));
+      }),
+      getBiggiHouseMemberships(token).then((items) => setMemberships(items || [])),
+    ])
+      .catch((err) => {
+        setError(err.message || "Unable to load houses right now.");
       })
       .finally(() => setLoadingList(false));
   }, []);
 
-  const currentHouses = getStoredHouses(userId);
-  const walletBalance = getBiggiHouseWalletBalance(userId);
+  const joinedHouseIds = useMemo(() => {
+    return new Set((memberships || []).map((m) => String(m?.house?.id || "")));
+  }, [memberships]);
 
   const handleJoin = (house) => {
     if (!user) {
       navigate("/login");
       return;
     }
-    if (currentHouses.some((item) => item.id === house.id)) {
+    if (joinedHouseIds.has(String(house.id))) {
       setError(`You have already joined House ${house.number}.`);
       return;
     }
     setError("");
     setSuccess("");
     setSelected(house);
-  };
-
-  const applyLocalJoin = (house, options = {}) => {
-    const { useRemoteState = false } = options;
-    const previousBalance = getBiggiHouseWalletBalance(userId);
-    const contribution = Number(house.minimum || 0);
-    const nextBalance = previousBalance - contribution;
-
-    setList((prev) =>
-      prev.map((item) =>
-        item.id === house.id
-          ? {
-              ...item,
-              ...house,
-              members: useRemoteState
-                ? Number(house.members ?? item.members ?? 0)
-                : Number(item.members || 0) + 1,
-              totalPool: useRemoteState
-                ? Number(house.totalPool ?? item.totalPool ?? 0)
-                : Number(item.totalPool || 0) + contribution,
-              status: "In Progress",
-            }
-          : item
-      )
-    );
-
-    addStoredHouse(
-      {
-      id: house.id,
-      number: house.number,
-      minimum: contribution,
-      },
-      userId
-    );
-
-    addStoredTransaction(
-      {
-      id: `house-join-${house.id}-${Date.now()}`,
-      type: "house-join",
-      label: `House ${house.number} contribution`,
-      note: "Weekly contribution paid",
-      amount: contribution,
-      previousBalance,
-      currentBalance: nextBalance,
-      variant: "blue",
-      createdAt: new Date().toISOString(),
-      },
-      userId
-    );
-
-    setBiggiHouseWalletBalance(userId, nextBalance);
-
-    setSuccess(`You joined House ${house.number} successfully.`);
-    setSelected(null);
-    navigate("/payment-success");
   };
 
   const confirmJoin = () => {
@@ -257,12 +210,20 @@ export default function Houses() {
     setLoading(true);
     const token = getAuthToken();
 
-    joinHouse(selected.id, token)
-      .then((updated) => {
-        applyLocalJoin({ ...selected, ...updated }, { useRemoteState: true });
+    joinBiggiHouseHouse(selected.id, token)
+      .then((response) => {
+        if (response?.house) {
+          setList((prev) =>
+            prev.map((item) => (item.id === response.house.id ? response.house : item))
+          );
+        }
+        if (response?.wallet?.balance !== undefined) {
+          setWalletBalance(Number(response.wallet.balance || 0));
+        }
+        return getBiggiHouseMemberships(token).then((items) => setMemberships(items || []));
       })
-      .catch(() => {
-        applyLocalJoin(selected);
+      .catch((err) => {
+        setError(err?.message || "Unable to join house. Please try again.");
       })
       .finally(() => setLoading(false));
   };
@@ -325,7 +286,7 @@ export default function Houses() {
             key={house.id}
             house={house}
             onJoin={handleJoin}
-            isSelected={currentHouses.some((item) => item.id === house.id)}
+            isSelected={joinedHouseIds.has(String(house.id))}
           />
         ))}
       </Grid>

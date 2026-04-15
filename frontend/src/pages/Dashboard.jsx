@@ -1,14 +1,20 @@
 import styled from "styled-components";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
 import {
   clearStoredHouses,
-  getStoredHouses,
-  getStoredTransactions,
-  getBiggiHouseWalletBalance,
+  getAuthToken,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
+import {
+  createBiggiHouseVendorRequest,
+  getBiggiHouseEligibility,
+  getBiggiHouseMemberships,
+  getBiggiHouseVendors,
+  getBiggiHouseWallet,
+} from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 0;
@@ -127,12 +133,39 @@ const ActivityItem = styled.li`
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const userId = user?.id || user?._id || user?.userId;
-  const houses = getStoredHouses(userId);
-  const transactions = getStoredTransactions(userId);
-  const walletBalance = getBiggiHouseWalletBalance(userId);
-  const latestHouse = houses[houses.length - 1];
-  const latestJoin = transactions.find((item) => item.type === "house-join");
+  const [wallet, setWallet] = useState(null);
+  const [vendors, setVendors] = useState([]);
+  const [eligibility, setEligibility] = useState(null);
+  const [memberships, setMemberships] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
+  const [requestVendorOpen, setRequestVendorOpen] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    vendorUserId: "",
+    phoneNumber: user?.phoneNumber || "",
+    network: "",
+    planId: "",
+    note: "",
+  });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setLoadingData(true);
+    Promise.all([
+      getBiggiHouseWallet(token).then((data) => setWallet(data)),
+      getBiggiHouseVendors(token).then((data) => setVendors(data || [])),
+      getBiggiHouseEligibility(token).then((data) => setEligibility(data)),
+      getBiggiHouseMemberships(token).then((data) => setMemberships(data || [])),
+    ])
+      .catch((err) => setError(err?.message || "Unable to load dashboard data."))
+      .finally(() => setLoadingData(false));
+  }, []);
+
+  const walletBalance = Number(wallet?.balance || 0);
+  const latestHouse = memberships[0]?.house || null;
+  const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
   const recentActivity =
     transactions.length > 0
       ? transactions.slice(0, 3).map((item) => ({
@@ -159,7 +192,7 @@ export default function Dashboard() {
   };
 
   const handleLeaveHouse = () => {
-    clearStoredHouses(userId);
+    clearStoredHouses();
     navigate("/houses");
   };
 
@@ -190,7 +223,7 @@ export default function Dashboard() {
         <WalletCard
           balance={walletBalance}
           currentHouse={latestHouse ? `House ${latestHouse.number}` : "Not joined"}
-          lastBalance={latestJoin?.previousBalance ?? walletBalance}
+          lastBalance={latestJoin?.meta?.previousBalance ?? walletBalance}
         />
         <Card>
           <CardLabel>Current house</CardLabel>
@@ -225,11 +258,26 @@ export default function Dashboard() {
         <Card>
           <CardLabel>Recent activity</CardLabel>
           <Activity>
-            {recentActivity.map((item) => (
-              <ActivityItem key={item.date}>
-                <span>{item.label}</span>
+            {(wallet?.transactions || []).slice(0, 3).map((item) => (
+              <ActivityItem key={item.reference || item._id}>
                 <span>
-                  {item.value} {"\u00B7"} {item.date}
+                  {item.type === "deposit"
+                    ? "Deposit"
+                    : item.type === "withdraw"
+                    ? "Withdraw"
+                    : "House contribution"}
+                </span>
+                <span>
+                  {new Intl.NumberFormat("en-NG", {
+                    style: "currency",
+                    currency: "NGN",
+                    maximumFractionDigits: 0,
+                  }).format(Number(item.amount || 0))}{" "}
+                  {"\u00B7"}{" "}
+                  {new Date(item.date || Date.now()).toLocaleDateString("en-NG", {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </span>
               </ActivityItem>
             ))}
@@ -240,12 +288,12 @@ export default function Dashboard() {
       <Grid style={{ marginTop: "24px" }}>
         <Card>
           <CardLabel>Joined houses</CardLabel>
-          {houses.length ? (
+          {memberships.length ? (
             <ul style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
-              {houses.map((house) => (
-                <li key={house.id}>
-                  House {house.number} {"\u00B7"} {"\u20A6"}
-                  {house.minimum}
+              {memberships.map((membership) => (
+                <li key={membership.id}>
+                  House {membership.house.number} {"\u00B7"} {"\u20A6"}
+                  {membership.house.minimum}
                 </li>
               ))}
             </ul>
@@ -255,7 +303,135 @@ export default function Dashboard() {
             </p>
           )}
         </Card>
+        <Card>
+          <CardLabel>Buy Data To Join Houses</CardLabel>
+          <div style={{ marginTop: "12px", display: "grid", gap: "10px" }}>
+            <p style={{ color: "#5b6475" }}>
+              Weekly requirement: buy at least 1 data bundle for your phone number.
+            </p>
+            <p style={{ color: "#111827", fontWeight: 700 }}>
+              Status:{" "}
+              {eligibility?.eligible
+                ? "Eligible"
+                : eligibility?.reason === "MISSING_PHONE_NUMBER"
+                ? "Add phone number"
+                : "Not eligible"}
+            </p>
+            {!eligibility?.eligible && (
+              <>
+                <SecondaryButton onClick={() => setRequestVendorOpen(true)}>
+                  Request a vendor purchase
+                </SecondaryButton>
+                <p style={{ color: "#5b6475", fontSize: "14px" }}>
+                  Vendors are Biggi Data merchant users who can help you buy data.
+                </p>
+              </>
+            )}
+            {loadingData && <p style={{ color: "#5b6475" }}>Loading...</p>}
+            {error && <p style={{ color: "#c02626" }}>{error}</p>}
+          </div>
+        </Card>
       </Grid>
+
+      {requestVendorOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(8, 12, 24, 0.35)",
+            display: "grid",
+            placeItems: "center",
+            padding: "20px",
+            zIndex: 60,
+          }}
+        >
+          <div
+            style={{
+              width: "min(560px, 100%)",
+              background: "#fff",
+              borderRadius: "18px",
+              padding: "18px",
+              border: "1px solid rgba(15, 23, 42, 0.08)",
+              boxShadow: "0 10px 40px rgba(15, 23, 42, 0.14)",
+              display: "grid",
+              gap: "12px",
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Request data purchase</h3>
+            <p style={{ color: "#5b6475", margin: 0 }}>
+              Choose a vendor. They will receive a notification in Biggi Data.
+            </p>
+            <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+              Vendor
+              <select
+                value={requestForm.vendorUserId}
+                onChange={(e) =>
+                  setRequestForm((prev) => ({ ...prev, vendorUserId: e.target.value }))
+                }
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(15, 23, 42, 0.14)",
+                }}
+              >
+                <option value="">Select vendor</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.username} ({vendor.phoneNumber})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+              Phone number
+              <input
+                value={requestForm.phoneNumber}
+                onChange={(e) =>
+                  setRequestForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                }
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(15, 23, 42, 0.14)",
+                }}
+              />
+            </label>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <GhostButton onClick={() => setRequestVendorOpen(false)}>
+                Cancel
+              </GhostButton>
+              <Button
+                onClick={() => {
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  if (!requestForm.vendorUserId || !requestForm.phoneNumber) {
+                    setError("Vendor and phone number are required.");
+                    return;
+                  }
+                  createBiggiHouseVendorRequest(
+                    {
+                      vendorUserId: requestForm.vendorUserId,
+                      phoneNumber: requestForm.phoneNumber,
+                      network: requestForm.network || undefined,
+                      planId: requestForm.planId || undefined,
+                      note: requestForm.note || undefined,
+                    },
+                    token
+                  )
+                    .then(() => {
+                      setRequestVendorOpen(false);
+                    })
+                    .catch((err) => setError(err?.message || "Request failed."));
+                }}
+              >
+                Send request
+              </Button>
+            </div>
+            {error && <p style={{ color: "#c02626", margin: 0 }}>{error}</p>}
+          </div>
+        </div>
+      )}
     </Wrapper>
   );
 }
