@@ -5,6 +5,7 @@ import { useAuth } from "../utils/AuthContext";
 import {
   getStoredHouses,
   getStoredTransactions,
+  getEffectiveWalletBalance,
   getUserWalletBalance,
 } from "../utils/auth";
 
@@ -157,7 +158,7 @@ export default function Wallet() {
   const { user } = useAuth();
   const houses = getStoredHouses();
   const transactions = getStoredTransactions();
-  const walletBalance = getUserWalletBalance(user);
+  const walletBalance = getEffectiveWalletBalance(user);
   const latestHouse = houses[houses.length - 1];
   const currentHouse = latestHouse ? `House ${latestHouse.number}` : "Not joined";
   const latestJoin = transactions.find((item) => item.type === "house-join");

@@ -9,8 +9,8 @@ import {
   addStoredTransaction,
   getAuthToken,
   getStoredHouses,
+  getEffectiveWalletBalance,
   getUserWalletBalance,
-  updateUserWalletBalance,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import { getHouses, joinHouse } from "../services/api";
@@ -132,7 +132,7 @@ const PrimaryButton = styled.button`
 
 export default function Houses() {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
   const [list, setList] = useState(houses);
@@ -169,13 +169,13 @@ export default function Houses() {
         if (data.length) setList(data);
       })
       .catch(() => {
-        setError("Using local house data while the live house service is unavailable.");
+        // Shared backend may not expose house endpoints; keep local catalog without alarming users.
       })
       .finally(() => setLoadingList(false));
   }, []);
 
   const currentHouses = getStoredHouses();
-  const walletBalance = getUserWalletBalance(user);
+  const walletBalance = getEffectiveWalletBalance(user);
 
   const handleJoin = (house) => {
     if (!user) {
@@ -193,7 +193,7 @@ export default function Houses() {
 
   const applyLocalJoin = (house, options = {}) => {
     const { useRemoteState = false } = options;
-    const previousBalance = getUserWalletBalance(user);
+    const previousBalance = getEffectiveWalletBalance(user);
     const contribution = Number(house.minimum || 0);
     const nextBalance = previousBalance - contribution;
 
@@ -232,8 +232,6 @@ export default function Houses() {
       variant: "blue",
       createdAt: new Date().toISOString(),
     });
-
-    updateUser((current) => updateUserWalletBalance(current, nextBalance));
 
     setSuccess(`You joined House ${house.number} successfully.`);
     setSelected(null);

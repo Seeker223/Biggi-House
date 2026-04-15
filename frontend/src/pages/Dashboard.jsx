@@ -6,6 +6,7 @@ import {
   clearStoredHouses,
   getStoredHouses,
   getStoredTransactions,
+  getEffectiveWalletBalance,
   getUserWalletBalance,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
@@ -129,7 +130,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const houses = getStoredHouses();
   const transactions = getStoredTransactions();
-  const walletBalance = getUserWalletBalance(user);
+  const walletBalance = getEffectiveWalletBalance(user);
   const latestHouse = houses[houses.length - 1];
   const latestJoin = transactions.find((item) => item.type === "house-join");
   const recentActivity =

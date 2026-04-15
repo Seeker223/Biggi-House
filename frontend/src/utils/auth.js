@@ -149,3 +149,16 @@ export const updateUserWalletBalance = (user, nextBalance) => {
 
   return nextUser;
 };
+
+export const getHouseReservedBalance = () => {
+  const transactions = getStoredTransactions();
+  return transactions
+    .filter((item) => item?.type === "house-join")
+    .reduce((sum, item) => sum + Number(item?.amount || 0), 0);
+};
+
+export const getEffectiveWalletBalance = (user) => {
+  const main = getUserWalletBalance(user);
+  const reserved = getHouseReservedBalance();
+  return Math.max(0, Number(main || 0) - Number(reserved || 0));
+};
