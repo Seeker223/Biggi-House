@@ -207,12 +207,16 @@ export default function Navbar() {
           <NavItem to="/" end>
             Home
           </NavItem>
-          <NavItem to="/houses">Houses</NavItem>
-          <NavItem to="/wallet">Wallet</NavItem>
-          <NavItem to="/profile">Profile</NavItem>
           <NavItem to="/faq">FAQ</NavItem>
-          <NavItem to="/dashboard">Dashboard</NavItem>
-          {user && <HouseLabel title={houseLabel}>{houseLabel}</HouseLabel>}
+          {user && (
+            <>
+              <NavItem to="/houses">Houses</NavItem>
+              <NavItem to="/wallet">Wallet</NavItem>
+              <NavItem to="/profile">Profile</NavItem>
+              <NavItem to="/dashboard">Dashboard</NavItem>
+              <HouseLabel title={houseLabel}>{houseLabel}</HouseLabel>
+            </>
+          )}
         </NavGroup>
         <Actions>
           {!user ? (
@@ -242,21 +246,25 @@ export default function Navbar() {
             <NavItem to="/" end onClick={() => setOpen(false)}>
               Home
             </NavItem>
-            <NavItem to="/houses" onClick={() => setOpen(false)}>
-              Houses
-            </NavItem>
-            <NavItem to="/wallet" onClick={() => setOpen(false)}>
-              Wallet
-            </NavItem>
-            <NavItem to="/profile" onClick={() => setOpen(false)}>
-              Profile
-            </NavItem>
             <NavItem to="/faq" onClick={() => setOpen(false)}>
               FAQ
             </NavItem>
-            <NavItem to="/dashboard" onClick={() => setOpen(false)}>
-              Dashboard
-            </NavItem>
+            {user && (
+              <>
+                <NavItem to="/houses" onClick={() => setOpen(false)}>
+                  Houses
+                </NavItem>
+                <NavItem to="/wallet" onClick={() => setOpen(false)}>
+                  Wallet
+                </NavItem>
+                <NavItem to="/profile" onClick={() => setOpen(false)}>
+                  Profile
+                </NavItem>
+                <NavItem to="/dashboard" onClick={() => setOpen(false)}>
+                  Dashboard
+                </NavItem>
+              </>
+            )}
           </MobileLinks>
           <MobileActions>
             {!user ? (
