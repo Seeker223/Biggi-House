@@ -16,6 +16,7 @@ const TopRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 `;
 
 const TitleRow = styled.div`
@@ -105,13 +106,14 @@ const Button = styled.button`
   background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
   font-weight: 600;
-  cursor: pointer;
   opacity: ${({ disabled }) => (disabled ? 0.65 : 1)};
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
 export default function HouseCard({ house, onJoin, isSelected }) {
   const isFull = Boolean(house.maxUsers && house.members >= house.maxUsers);
+  const isDisabled = isFull || isSelected;
+
   return (
     <Card>
       <TopRow>
@@ -127,6 +129,7 @@ export default function HouseCard({ house, onJoin, isSelected }) {
           <Badge $variant={house.status}>{house.status}</Badge>
         )}
       </TopRow>
+
       <Meta>
         <MetaItem>
           <MetaIcon aria-hidden="true">
@@ -138,8 +141,12 @@ export default function HouseCard({ house, onJoin, isSelected }) {
               />
             </svg>
           </MetaIcon>
-          <span>Min: {"\u20A6"}{house.minimum}</span>
+          <span>
+            Min: {"\u20A6"}
+            {house.minimum}
+          </span>
         </MetaItem>
+
         <MetaItem>
           <MetaIcon aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -157,9 +164,14 @@ export default function HouseCard({ house, onJoin, isSelected }) {
           </span>
         </MetaItem>
       </Meta>
-      <Pool>₦{house.totalPool.toLocaleString()} pool</Pool>
-      <Button disabled={isFull} onClick={() => onJoin?.(house)}>
-        {isFull ? "House Full" : "Join House"}
+
+      <Pool>
+        {"\u20A6"}
+        {Number(house.totalPool || 0).toLocaleString()} pool
+      </Pool>
+
+      <Button disabled={isDisabled} onClick={() => onJoin?.(house)}>
+        {isSelected ? "Already joined" : isFull ? "House Full" : "Join House"}
       </Button>
     </Card>
   );

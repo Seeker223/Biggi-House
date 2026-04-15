@@ -47,6 +47,7 @@ const Row = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   font-size: 14px;
   color: ${({ theme }) => theme.colors.muted};
 `;
@@ -59,32 +60,45 @@ const Divider = styled.div`
 const RowValue = styled.span`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.ink};
+  text-align: right;
 `;
 
-export default function WalletCard() {
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+
+export default function WalletCard({
+  balance = 0,
+  currentHouse = "Not joined",
+  lastBalance = 0,
+  weeklyPayoutTime = "Fridays · 6:00 PM",
+}) {
   return (
     <Card>
       <CardTop>
-        <CardLabel>Street Name</CardLabel>
+        <CardLabel>Wallet Balance</CardLabel>
         <BalanceRow>
           <Currency>{"\u20A6"}</Currency>
-          <Amount>15,000</Amount>
+          <Amount>{Number(balance || 0).toLocaleString()}</Amount>
         </BalanceRow>
       </CardTop>
       <Body>
         <Row>
           <span>Current house</span>
-          <RowValue>House 3</RowValue>
+          <RowValue>{currentHouse}</RowValue>
         </Row>
         <Divider />
         <Row>
           <span>Last balance</span>
-          <RowValue>{"\u20A6"}37,000</RowValue>
+          <RowValue>{formatCurrency(lastBalance)}</RowValue>
         </Row>
         <Divider />
         <Row>
           <span>Weekly payout time</span>
-          <RowValue>Fridays · 6:00 PM</RowValue>
+          <RowValue>{weeklyPayoutTime}</RowValue>
         </Row>
       </Body>
     </Card>

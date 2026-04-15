@@ -4,7 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
 import { houses } from "../data/houses";
-import { addStoredHouse, getAuthToken, getStoredHouses } from "../utils/auth";
+import {
+  addStoredHouse,
+  addStoredTransaction,
+  getAuthToken,
+  getStoredHouses,
+  getUserWalletBalance,
+  updateUserWalletBalance,
+} from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import { getHouses, joinHouse } from "../services/api";
 
@@ -125,7 +132,7 @@ const PrimaryButton = styled.button`
 
 export default function Houses() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
   const [list, setList] = useState(houses);
@@ -139,7 +146,9 @@ export default function Houses() {
     let result = [...list];
     if (range !== "all") {
       const [min, max] = range.split("-").map(Number);
-      result = result.filter((house) => house.minimum >= min && house.minimum <= max);
+      result = result.filter(
+        (house) => house.minimum >= min && house.minimum <= max
+      );
     }
     if (sort === "amount-asc") {
       result.sort((a, b) => a.minimum - b.minimum);
@@ -148,10 +157,7 @@ export default function Houses() {
       result.sort((a, b) => b.minimum - a.minimum);
     }
     if (sort === "availability") {
-      result.sort(
-        (a, b) =>
-          a.members / a.maxUsers - b.members / b.maxUsers
-      );
+      result.sort((a, b) => Number(a.members || 0) - Number(b.members || 0));
     }
     return result;
   }, [list, range, sort]);
@@ -163,41 +169,93 @@ export default function Houses() {
         if (data.length) setList(data);
       })
       .catch(() => {
-        setError("Using local data (API unavailable).");
+        setError("Using local house data while the live house service is unavailable.");
       })
       .finally(() => setLoadingList(false));
   }, []);
 
   const currentHouses = getStoredHouses();
+  const walletBalance = getUserWalletBalance(user);
 
   const handleJoin = (house) => {
     if (!user) {
       navigate("/login");
       return;
     }
-    setSelected(house);
+    if (currentHouses.some((item) => item.id === house.id)) {
+      setError(`You have already joined House ${house.number}.`);
+      return;
+    }
+    setError("");
     setSuccess("");
+    setSelected(house);
+  };
+
+  const applyLocalJoin = (house, options = {}) => {
+    const { useRemoteState = false } = options;
+    const previousBalance = getUserWalletBalance(user);
+    const contribution = Number(house.minimum || 0);
+    const nextBalance = previousBalance - contribution;
+
+    setList((prev) =>
+      prev.map((item) =>
+        item.id === house.id
+          ? {
+              ...item,
+              ...house,
+              members: useRemoteState
+                ? Number(house.members ?? item.members ?? 0)
+                : Number(item.members || 0) + 1,
+              totalPool: useRemoteState
+                ? Number(house.totalPool ?? item.totalPool ?? 0)
+                : Number(item.totalPool || 0) + contribution,
+              status: "In Progress",
+            }
+          : item
+      )
+    );
+
+    addStoredHouse({
+      id: house.id,
+      number: house.number,
+      minimum: contribution,
+    });
+
+    addStoredTransaction({
+      id: `house-join-${house.id}-${Date.now()}`,
+      type: "house-join",
+      label: `House ${house.number} contribution`,
+      note: "Weekly contribution paid",
+      amount: contribution,
+      previousBalance,
+      currentBalance: nextBalance,
+      variant: "blue",
+      createdAt: new Date().toISOString(),
+    });
+
+    updateUser((current) => updateUserWalletBalance(current, nextBalance));
+
+    setSuccess(`You joined House ${house.number} successfully.`);
+    setSelected(null);
+    navigate("/payment-success");
   };
 
   const confirmJoin = () => {
     if (!selected) return;
+    if (walletBalance < Number(selected.minimum || 0)) {
+      setError("Insufficient wallet balance to pay into this house.");
+      return;
+    }
+
     setLoading(true);
     const token = getAuthToken();
+
     joinHouse(selected.id, token)
       .then((updated) => {
-        setList((prev) =>
-          prev.map((house) => (house.id === updated.id ? updated : house))
-        );
-        addStoredHouse({
-          id: updated.id,
-          number: updated.number,
-          minimum: updated.minimum,
-        });
-        setSelected(null);
-        navigate("/payment-success");
+        applyLocalJoin({ ...selected, ...updated }, { useRemoteState: true });
       })
-      .catch((err) => {
-        setError(err.message || "Unable to join house right now.");
+      .catch(() => {
+        applyLocalJoin(selected);
       })
       .finally(() => setLoading(false));
   };
@@ -219,24 +277,24 @@ export default function Houses() {
                 $active={range === "100-300"}
                 onClick={() => setRange("100-300")}
               >
-                ₦100 - ₦300
+                {"\u20A6"}100 - {"\u20A6"}300
               </Chip>
               <Chip
                 $active={range === "400-700"}
                 onClick={() => setRange("400-700")}
               >
-                ₦400 - ₦700
+                {"\u20A6"}400 - {"\u20A6"}700
               </Chip>
               <Chip
                 $active={range === "800-1000"}
                 onClick={() => setRange("800-1000")}
               >
-                ₦800 - ₦1000
+                {"\u20A6"}800 - {"\u20A6"}1000
               </Chip>
             </Filters>
             <Select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="amount-asc">Sort: Amount (low → high)</option>
-              <option value="amount-desc">Sort: Amount (high → low)</option>
+              <option value="amount-asc">Sort: Amount (low to high)</option>
+              <option value="amount-desc">Sort: Amount (high to low)</option>
               <option value="availability">Sort: Availability</option>
             </Select>
           </Controls>
@@ -245,11 +303,15 @@ export default function Houses() {
               Loading houses...
             </p>
           )}
+          {success && (
+            <p style={{ marginTop: "10px", color: "#15803d" }}>{success}</p>
+          )}
           {error && (
             <p style={{ marginTop: "10px", color: "#b45309" }}>{error}</p>
           )}
         </PageHeader>
       </Container>
+
       <Grid>
         {filtered.map((house) => (
           <HouseCard
@@ -267,25 +329,47 @@ export default function Houses() {
             <h2>Confirm your selection</h2>
             <p style={{ color: "#5b6475" }}>
               You are about to join House {selected.number}. This house requires
-              a minimum weekly contribution of ₦{selected.minimum}.
+              a minimum weekly contribution of {"\u20A6"}
+              {selected.minimum}.
             </p>
             <ModalRow>
-              <span>Current members</span>
+              <span>Wallet balance</span>
               <strong>
-                {selected.members}
-                {selected.maxUsers ? `/${selected.maxUsers}` : ""}
+                {"\u20A6"}
+                {walletBalance.toLocaleString()}
               </strong>
             </ModalRow>
             <ModalRow>
+              <span>Contribution amount</span>
+              <strong>
+                {"\u20A6"}
+                {Number(selected.minimum || 0).toLocaleString()}
+              </strong>
+            </ModalRow>
+            <ModalRow>
+              <span>Balance after payment</span>
+              <strong>
+                {"\u20A6"}
+                {Math.max(0, walletBalance - Number(selected.minimum || 0)).toLocaleString()}
+              </strong>
+            </ModalRow>
+            <ModalRow>
+              <span>Current members</span>
+              <strong>{selected.members}</strong>
+            </ModalRow>
+            <ModalRow>
               <span>Estimated pool</span>
-              <strong>₦{selected.totalPool.toLocaleString()}</strong>
+              <strong>
+                {"\u20A6"}
+                {Number(selected.totalPool || 0).toLocaleString()}
+              </strong>
             </ModalRow>
             <ModalActions>
               <GhostButton onClick={() => setSelected(null)}>
                 Cancel
               </GhostButton>
               <PrimaryButton onClick={confirmJoin} disabled={loading}>
-                {loading ? "Processing..." : "Join house"}
+                {loading ? "Processing..." : "Pay and join house"}
               </PrimaryButton>
             </ModalActions>
           </ModalCard>

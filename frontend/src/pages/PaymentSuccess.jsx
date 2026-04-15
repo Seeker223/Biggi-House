@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Container from "../components/Container";
 import { WalletIcon, PayoutIcon } from "../components/Icons";
-import { getStoredHouses } from "../utils/auth";
+import { getStoredHouses, getStoredTransactions } from "../utils/auth";
 
 const Wrapper = styled(Container)`
   padding: 70px 0;
@@ -54,6 +54,7 @@ const History = styled.ul`
 const HistoryItem = styled.li`
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   padding: 10px 12px;
   border-radius: 12px;
   background: ${({ theme }) => theme.colors.soft};
@@ -76,7 +77,10 @@ const GhostButton = styled(Link)`
 
 export default function PaymentSuccess() {
   const houses = getStoredHouses();
-  const latest = houses[houses.length - 1];
+  const transactions = getStoredTransactions();
+  const latestHouse = houses[houses.length - 1];
+  const latestJoin = transactions.find((item) => item.type === "house-join");
+
   return (
     <Wrapper>
       <Card>
@@ -92,11 +96,23 @@ export default function PaymentSuccess() {
         <History>
           <HistoryItem>
             <span>Contribution</span>
-            <strong>₦{latest?.minimum ?? 0}</strong>
+            <strong>
+              {"\u20A6"}
+              {Number(latestJoin?.amount ?? latestHouse?.minimum ?? 0).toLocaleString()}
+            </strong>
           </HistoryItem>
           <HistoryItem>
             <span>House</span>
-            <strong>{latest ? `House ${latest.number}` : "Not selected"}</strong>
+            <strong>
+              {latestHouse ? `House ${latestHouse.number}` : "Not selected"}
+            </strong>
+          </HistoryItem>
+          <HistoryItem>
+            <span>Wallet balance</span>
+            <strong>
+              {"\u20A6"}
+              {Number(latestJoin?.currentBalance ?? 0).toLocaleString()}
+            </strong>
           </HistoryItem>
           <HistoryItem>
             <span>Status</span>

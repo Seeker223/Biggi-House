@@ -2,9 +2,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   clearAuthToken,
   clearStoredHouses,
+  clearStoredTransactions,
   clearStoredUser,
   getAuthToken,
   getStoredUser,
+  setStoredUser,
   setRefreshToken,
   clearRefreshToken,
   setAuthToken,
@@ -70,11 +72,21 @@ export function AuthProvider({ children }) {
     clearAuthToken();
     clearRefreshToken();
     clearStoredHouses();
+    clearStoredTransactions();
     setUser(null);
   };
 
+  const updateUser = (updater) => {
+    setUser((current) => {
+      const next =
+        typeof updater === "function" ? updater(current || {}) : updater;
+      setStoredUser(next);
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

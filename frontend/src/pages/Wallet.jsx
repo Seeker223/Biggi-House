@@ -1,6 +1,12 @@
 import styled from "styled-components";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
+import { useAuth } from "../utils/AuthContext";
+import {
+  getStoredHouses,
+  getStoredTransactions,
+  getUserWalletBalance,
+} from "../utils/auth";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -96,6 +102,7 @@ const ActivityItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
 `;
 
@@ -111,10 +118,12 @@ const IconCircle = styled.div`
   border-radius: 999px;
   display: grid;
   place-items: center;
+
   svg {
     width: 18px;
     height: 18px;
   }
+
   background: ${({ $variant }) =>
     $variant === "green"
       ? "rgba(34, 197, 94, 0.15)"
@@ -137,7 +146,41 @@ const ItemValue = styled.div`
   color: ${({ theme }) => theme.colors.ink};
 `;
 
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+
 export default function Wallet() {
+  const { user } = useAuth();
+  const houses = getStoredHouses();
+  const transactions = getStoredTransactions();
+  const walletBalance = getUserWalletBalance(user);
+  const latestHouse = houses[houses.length - 1];
+  const currentHouse = latestHouse ? `House ${latestHouse.number}` : "Not joined";
+  const latestJoin = transactions.find((item) => item.type === "house-join");
+  const recentTransactions =
+    transactions.length > 0
+      ? transactions.slice(0, 4)
+      : [
+          {
+            id: "reward",
+            label: "Quick Receive",
+            note: "Investment",
+            amount: user?.rewardBalance ?? 0,
+            variant: "green",
+          },
+          {
+            id: "wallet",
+            label: "Course House",
+            note: currentHouse,
+            amount: walletBalance,
+            variant: "blue",
+          },
+        ];
+
   return (
     <Wrapper>
       <Phone>
@@ -156,7 +199,11 @@ export default function Wallet() {
         </Header>
         <Layout>
           <div>
-            <WalletCard />
+            <WalletCard
+              balance={walletBalance}
+              currentHouse={currentHouse}
+              lastBalance={latestJoin?.previousBalance ?? walletBalance}
+            />
             <Actions>
               <PrimaryButton>Deposit</PrimaryButton>
               <GhostButton>Withdraw</GhostButton>
@@ -164,45 +211,39 @@ export default function Wallet() {
           </div>
           <ActivityPanel>
             <ActivityTitle>Recent Activity</ActivityTitle>
-            <ActivityItem>
-              <ItemLeft>
-                <IconCircle $variant="green" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M6 12l4 4 8-8"
-                      stroke="#16a34a"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </IconCircle>
-                <div>
-                  <ItemTitle>Quick Receive</ItemTitle>
-                  <ItemSub>Investment</ItemSub>
-                </div>
-              </ItemLeft>
-              <ItemValue>₦15,000</ItemValue>
-            </ActivityItem>
-            <ActivityItem>
-              <ItemLeft>
-                <IconCircle $variant="blue" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 4l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 4z"
-                      stroke="#2563eb"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </IconCircle>
-                <div>
-                  <ItemTitle>Course House</ItemTitle>
-                  <ItemSub>Payment</ItemSub>
-                </div>
-              </ItemLeft>
-              <ItemValue>₦15,000</ItemValue>
-            </ActivityItem>
+            {recentTransactions.map((item) => (
+              <ActivityItem key={item.id}>
+                <ItemLeft>
+                  <IconCircle $variant={item.variant || "blue"} aria-hidden="true">
+                    {item.variant === "green" ? (
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M6 12l4 4 8-8"
+                          stroke="#16a34a"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 4l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 4z"
+                          stroke="#2563eb"
+                          strokeWidth="1.8"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </IconCircle>
+                  <div>
+                    <ItemTitle>{item.label}</ItemTitle>
+                    <ItemSub>{item.note}</ItemSub>
+                  </div>
+                </ItemLeft>
+                <ItemValue>{formatCurrency(item.amount)}</ItemValue>
+              </ActivityItem>
+            ))}
           </ActivityPanel>
         </Layout>
       </Phone>

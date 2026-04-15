@@ -2,7 +2,12 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
-import { clearStoredHouses, getStoredHouses } from "../utils/auth";
+import {
+  clearStoredHouses,
+  getStoredHouses,
+  getStoredTransactions,
+  getUserWalletBalance,
+} from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 
 const Wrapper = styled(Container)`
@@ -123,6 +128,29 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const houses = getStoredHouses();
+  const transactions = getStoredTransactions();
+  const walletBalance = getUserWalletBalance(user);
+  const latestHouse = houses[houses.length - 1];
+  const latestJoin = transactions.find((item) => item.type === "house-join");
+  const recentActivity =
+    transactions.length > 0
+      ? transactions.slice(0, 3).map((item) => ({
+          label: item.label,
+          value: new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+            maximumFractionDigits: 0,
+          }).format(Number(item.amount || 0)),
+          date: new Date(item.createdAt || Date.now()).toLocaleDateString("en-NG", {
+            day: "numeric",
+            month: "short",
+          }),
+        }))
+      : [
+          { label: "Contribution", value: "\u20A6300", date: "Apr 5" },
+          { label: "Contribution", value: "\u20A6300", date: "Mar 5" },
+          { label: "Contribution", value: "\u20A6300", date: "Feb 5" },
+        ];
 
   const handleLogout = () => {
     logout();
@@ -158,11 +186,15 @@ export default function Dashboard() {
       </Header>
 
       <Grid>
-        <WalletCard />
+        <WalletCard
+          balance={walletBalance}
+          currentHouse={latestHouse ? `House ${latestHouse.number}` : "Not joined"}
+          lastBalance={latestJoin?.previousBalance ?? walletBalance}
+        />
         <Card>
           <CardLabel>Current house</CardLabel>
           <CardValue>
-            {houses.length ? `House ${houses[0].number}` : "Not joined"}
+            {latestHouse ? `House ${latestHouse.number}` : "Not joined"}
           </CardValue>
         </Card>
         <Card>
@@ -192,11 +224,7 @@ export default function Dashboard() {
         <Card>
           <CardLabel>Recent activity</CardLabel>
           <Activity>
-            {[
-              { label: "Contribution", value: "\u20A6300", date: "Apr 5" },
-              { label: "Contribution", value: "\u20A6300", date: "Mar 5" },
-              { label: "Contribution", value: "\u20A6300", date: "Feb 5" },
-            ].map((item) => (
+            {recentActivity.map((item) => (
               <ActivityItem key={item.date}>
                 <span>{item.label}</span>
                 <span>
