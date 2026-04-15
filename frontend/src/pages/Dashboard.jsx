@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
 import {
-  clearStoredHouses,
   getAuthToken,
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
@@ -166,25 +165,6 @@ export default function Dashboard() {
   const walletBalance = Number(wallet?.balance || 0);
   const latestHouse = memberships[0]?.house || null;
   const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
-  const recentActivity =
-    transactions.length > 0
-      ? transactions.slice(0, 3).map((item) => ({
-          label: item.label,
-          value: new Intl.NumberFormat("en-NG", {
-            style: "currency",
-            currency: "NGN",
-            maximumFractionDigits: 0,
-          }).format(Number(item.amount || 0)),
-          date: new Date(item.createdAt || Date.now()).toLocaleDateString("en-NG", {
-            day: "numeric",
-            month: "short",
-          }),
-        }))
-      : [
-          { label: "Contribution", value: "\u20A6300", date: "Apr 5" },
-          { label: "Contribution", value: "\u20A6300", date: "Mar 5" },
-          { label: "Contribution", value: "\u20A6300", date: "Feb 5" },
-        ];
 
   const handleLogout = () => {
     logout();
@@ -192,7 +172,7 @@ export default function Dashboard() {
   };
 
   const handleLeaveHouse = () => {
-    clearStoredHouses();
+    // Memberships are persisted server-side; leaving is not implemented yet.
     navigate("/houses");
   };
 
@@ -212,8 +192,8 @@ export default function Dashboard() {
           )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          {houses.length > 0 && (
-            <WarningButton onClick={handleLeaveHouse}>Leave house</WarningButton>
+          {memberships.length > 0 && (
+            <WarningButton onClick={handleLeaveHouse}>View houses</WarningButton>
           )}
           <GhostButton onClick={handleLogout}>Logout</GhostButton>
         </div>
