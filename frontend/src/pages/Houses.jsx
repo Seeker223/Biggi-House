@@ -7,8 +7,11 @@ import { houses } from "../data/houses";
 import { getAuthToken } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import {
+  createBiggiHouseVendorRequest,
+  getBiggiHouseEligibility,
   getBiggiHouseHouses,
   getBiggiHouseMemberships,
+  getBiggiHouseVendors,
   getBiggiHouseWallet,
   joinBiggiHouseHouse,
 } from "../services/api";
@@ -128,6 +131,25 @@ const PrimaryButton = styled.button`
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
+const InfoCard = styled.div`
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  display: grid;
+  gap: 8px;
+`;
+
+const InfoTitle = styled.div`
+  font-weight: 700;
+`;
+
+const InfoText = styled.div`
+  color: ${({ theme }) => theme.colors.muted};
+  font-size: 14px;
+`;
+
 export default function Houses() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -142,6 +164,15 @@ export default function Houses() {
   const [success, setSuccess] = useState("");
   const [walletBalance, setWalletBalance] = useState(0);
   const [memberships, setMemberships] = useState([]);
+  const [eligibility, setEligibility] = useState(null);
+  const [vendors, setVendors] = useState([]);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
+  const [vendorForm, setVendorForm] = useState({
+    vendorUserId: "",
+    phoneNumber: user?.phoneNumber || "",
+    note: "",
+  });
 
   const filtered = useMemo(() => {
     let result = [...list];
@@ -175,6 +206,8 @@ export default function Houses() {
         setWalletBalance(Number(wallet?.balance || 0));
       }),
       getBiggiHouseMemberships(token).then((items) => setMemberships(items || [])),
+      getBiggiHouseEligibility(token).then((data) => setEligibility(data)),
+      getBiggiHouseVendors(token).then((items) => setVendors(items || [])),
     ])
       .catch((err) => {
         setError(err.message || "Unable to load houses right now.");
@@ -186,6 +219,21 @@ export default function Houses() {
     return new Set((memberships || []).map((m) => String(m?.house?.id || "")));
   }, [memberships]);
 
+  const requiredPurchasesForHouse = (house) => {
+    const raw = Number(house?.number || 0) || Math.round(Number(house?.minimum || 0) / 100);
+    return Math.max(1, Math.min(10, raw || 1));
+  };
+
+  const refreshEligibility = () => {
+    const token = getAuthToken();
+    if (!token) return;
+    getBiggiHouseEligibility(token)
+      .then((data) => setEligibility(data))
+      .catch(() => {
+        // Keep last known state.
+      });
+  };
+
   const handleJoin = (house) => {
     if (!user) {
       navigate("/login");
@@ -195,6 +243,16 @@ export default function Houses() {
       setError(`You have already joined House ${house.number}.`);
       return;
     }
+
+    // Gate join flow: user must have at least 1 successful data purchase this week to their number.
+    const requiredPurchases = requiredPurchasesForHouse(house);
+    const purchasesThisWeek = Number(eligibility?.purchasesThisWeek || 0);
+    if (!eligibility?.phoneNumber || purchasesThisWeek < requiredPurchases) {
+      setSelected(house);
+      setGateOpen(true);
+      return;
+    }
+
     setError("");
     setSuccess("");
     setSelected(house);
@@ -223,6 +281,15 @@ export default function Houses() {
         return getBiggiHouseMemberships(token).then((items) => setMemberships(items || []));
       })
       .catch((err) => {
+        if (
+          err?.code === "INSUFFICIENT_WEEKLY_PURCHASES" ||
+          err?.code === "NO_PURCHASE_THIS_WEEK" ||
+          err?.code === "MISSING_PHONE_NUMBER"
+        ) {
+          setGateOpen(true);
+          refreshEligibility();
+          return;
+        }
         setError(err?.message || "Unable to join house. Please try again.");
       })
       .finally(() => setLoading(false));
@@ -277,6 +344,41 @@ export default function Houses() {
           {error && (
             <p style={{ marginTop: "10px", color: "#b45309" }}>{error}</p>
           )}
+
+          <InfoCard>
+            <InfoTitle>Weekly requirement</InfoTitle>
+            <InfoText>
+              Your weekly data purchase count must match your house level:
+              House 1 needs 1 purchase, House 2 needs 2 purchases... House 10 needs 10 purchases.
+            </InfoText>
+            <InfoText>
+              Status:{" "}
+              <strong>
+                {Number(eligibility?.purchasesThisWeek || 0) > 0
+                  ? "Partially eligible"
+                  : eligibility?.reason === "MISSING_PHONE_NUMBER"
+                  ? "Add phone number"
+                  : "Not eligible"}
+              </strong>
+              {eligibility?.phoneNumber ? ` (Number: ${eligibility.phoneNumber})` : ""}
+            </InfoText>
+            {eligibility?.phoneNumber && (
+              <InfoText>
+                Purchases this week:{" "}
+                <strong>{Number(eligibility?.purchasesThisWeek || 0)}</strong>
+              </InfoText>
+            )}
+            {!eligibility?.eligible && (
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <GhostButton type="button" onClick={refreshEligibility}>
+                  Refresh status
+                </GhostButton>
+                <PrimaryButton type="button" onClick={() => setVendorOpen(true)}>
+                  Request vendor purchase
+                </PrimaryButton>
+              </div>
+            )}
+          </InfoCard>
         </PageHeader>
       </Container>
 
@@ -291,7 +393,77 @@ export default function Houses() {
         ))}
       </Grid>
 
-      {selected && (
+      {gateOpen && (
+        <ModalBackdrop>
+          <ModalCard>
+            <h2>Confirm eligibility</h2>
+            <p style={{ color: "#5b6475" }}>
+              Before you can join{" "}
+              {selected ? `House ${selected.number}` : "a house"}, you must have enough
+              successful data purchases this week for your phone number.
+            </p>
+            <ModalRow>
+              <span>Your number</span>
+              <strong>{eligibility?.phoneNumber || "Not set"}</strong>
+            </ModalRow>
+            <ModalRow>
+              <span>Purchases this week</span>
+              <strong>{Number(eligibility?.purchasesThisWeek || 0)}</strong>
+            </ModalRow>
+            {selected && (
+              <ModalRow>
+                <span>Required for this house</span>
+                <strong>{requiredPurchasesForHouse(selected)}</strong>
+              </ModalRow>
+            )}
+            <ModalRow>
+              <span>Status</span>
+              <strong>
+                {selected &&
+                Number(eligibility?.purchasesThisWeek || 0) >=
+                  requiredPurchasesForHouse(selected)
+                  ? "Eligible"
+                  : eligibility?.reason === "MISSING_PHONE_NUMBER"
+                  ? "Add phone number"
+                  : "Not eligible"}
+              </strong>
+            </ModalRow>
+            <ModalActions>
+              <GhostButton
+                type="button"
+                onClick={() => {
+                  setGateOpen(false);
+                  setSelected(null);
+                }}
+              >
+                Close
+              </GhostButton>
+              <GhostButton type="button" onClick={refreshEligibility}>
+                Refresh
+              </GhostButton>
+              {!eligibility?.eligible && (
+                <PrimaryButton type="button" onClick={() => setVendorOpen(true)}>
+                  Request vendor purchase
+                </PrimaryButton>
+              )}
+              {selected &&
+                Number(eligibility?.purchasesThisWeek || 0) >=
+                  requiredPurchasesForHouse(selected) && (
+                <PrimaryButton
+                  type="button"
+                  onClick={() => {
+                    setGateOpen(false);
+                  }}
+                >
+                  Continue to join
+                </PrimaryButton>
+              )}
+            </ModalActions>
+          </ModalCard>
+        </ModalBackdrop>
+      )}
+
+      {selected && !gateOpen && (
         <ModalBackdrop>
           <ModalCard>
             <h2>Confirm your selection</h2>
@@ -338,6 +510,103 @@ export default function Houses() {
               </GhostButton>
               <PrimaryButton onClick={confirmJoin} disabled={loading}>
                 {loading ? "Processing..." : "Pay and join house"}
+              </PrimaryButton>
+            </ModalActions>
+          </ModalCard>
+        </ModalBackdrop>
+      )}
+
+      {vendorOpen && (
+        <ModalBackdrop>
+          <ModalCard>
+            <h2>Request vendor purchase</h2>
+            <p style={{ color: "#5b6475" }}>
+              Choose a Biggi Data merchant. They will be notified that you want to buy
+              data for this number.
+            </p>
+            <div style={{ display: "grid", gap: "10px" }}>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Vendor
+                <select
+                  value={vendorForm.vendorUserId}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, vendorUserId: e.target.value }))
+                  }
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                    background: "#fff",
+                  }}
+                >
+                  <option value="">Select vendor</option>
+                  {vendors.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>
+                      {vendor.username} ({vendor.phoneNumber})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Phone number
+                <input
+                  value={vendorForm.phoneNumber}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                  }
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                  }}
+                />
+              </label>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Note (optional)
+                <input
+                  value={vendorForm.note}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  placeholder="e.g. 1GB for MTN"
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                  }}
+                />
+              </label>
+            </div>
+            <ModalActions>
+              <GhostButton type="button" onClick={() => setVendorOpen(false)}>
+                Cancel
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={() => {
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  if (!vendorForm.vendorUserId || !vendorForm.phoneNumber) {
+                    setError("Vendor and phone number are required.");
+                    return;
+                  }
+                  createBiggiHouseVendorRequest(
+                    {
+                      vendorUserId: vendorForm.vendorUserId,
+                      phoneNumber: vendorForm.phoneNumber,
+                      note: vendorForm.note || undefined,
+                    },
+                    token
+                  )
+                    .then(() => {
+                      setVendorOpen(false);
+                      setSuccess("Vendor request sent. The vendor was notified in Biggi Data.");
+                    })
+                    .catch((err) => setError(err?.message || "Request failed."));
+                }}
+              >
+                Send request
               </PrimaryButton>
             </ModalActions>
           </ModalCard>
