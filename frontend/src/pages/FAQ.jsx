@@ -78,27 +78,35 @@ export default function FAQ() {
   const items = [
     {
       q: "How do houses work?",
-      a: "Each house has a minimum contribution. Once you join, you contribute weekly and follow a clear payout schedule.",
+      a: "Each house has a minimum weekly contribution (House 1 starts at \u20A6100 up to House 10 at \u20A61000). When you join a house, your BiggiHouse wallet is deducted and your membership is recorded.",
     },
     {
-      q: "How many people can join a house?",
-      a: "Houses are open to multiple contributors. Your dashboard tracks participation and payout progress.",
+      q: "What do I need before I can join a house?",
+      a: "You must have successful data purchases this week for your phone number (from Biggi Data). The required number of purchases matches the house level: House 1 needs 1 purchase, House 2 needs 2 purchases ... House 10 needs 10 purchases.",
     },
     {
       q: "How are payouts handled?",
-      a: "Payouts are scheduled and transparent. You can see your position and the next payout date in your dashboard.",
+      a: "Payouts are weekly. Your dashboard shows the next payout time and your latest activity so the flow stays transparent.",
     },
     {
       q: "Can I join more than one house?",
       a: "Yes. You can join multiple houses to scale your savings goals.",
     },
     {
-      q: "How do I verify my payments?",
-      a: "Every payment is verified before it is added to a house. Your wallet and history confirm the status.",
+      q: "Is BiggiHouse wallet the same as Biggi Data wallet?",
+      a: "No. BiggiHouse has its own wallet and transaction history. Biggi Data has a separate wallet for data purchases and other services.",
     },
     {
-      q: "Is my money safe?",
-      a: "We apply verified payment checks, transparent tracking, and clear activity logs to keep your savings protected.",
+      q: "How do vendor purchases work?",
+      a: "Biggi Data merchant users act as vendors. If you need help buying data to meet eligibility, you can request a vendor from your dashboard (or houses page). The vendor gets a notification in Biggi Data and can assist you.",
+    },
+    {
+      q: "Can I use the same account on Biggi Data and BiggiHouse?",
+      a: "Accounts are managed by a shared backend, but access is controlled per app. By default, BiggiHouse users are private users and may not be allowed to sign in on Biggi Data unless their account is enabled for it.",
+    },
+    {
+      q: "Is BiggiHouse powered by Biggi Data?",
+      a: "Yes. BiggiHouse uses Biggi Data bundles services for eligibility checks and merchant vendor workflows.",
     },
   ];
 
@@ -107,8 +115,8 @@ export default function FAQ() {
       <Header>
         <Title>Frequently Asked Questions</Title>
         <Sub>
-          Everything you need to know about BiggiHouse cycles, payments, and
-          payouts.
+          Everything you need to know about BiggiHouse houses, eligibility,
+          weekly payouts, and vendor purchases powered by Biggi Data.
         </Sub>
       </Header>
       <Grid>
@@ -126,7 +134,7 @@ export default function FAQ() {
             Reach out and our support team will respond quickly.
           </p>
         </div>
-        <CtaButton href="#">Contact support</CtaButton>
+        <CtaButton href="mailto:support@biggihouse.com">Contact support</CtaButton>
       </Cta>
     </Wrapper>
   );

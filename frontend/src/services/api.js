@@ -128,6 +128,56 @@ export async function createBiggiHouseVendorRequest(payload, token) {
   return data.request;
 }
 
+export async function getBiggiDataBalance(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/wallet/balance`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load balance");
+  return data.balance;
+}
+
+export async function getBiggiDataDepositFeeSettings(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/wallet/deposit-fee-settings`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load fee settings");
+  return data.settings || data.feeSettings || data;
+}
+
+export async function getBiggiDataVirtualAccount(token, refresh = false) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const url = `${API_BASE}/wallet/virtual-account${refresh ? "?refresh=true" : ""}`;
+  const res = await fetch(url, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load virtual account");
+  return data;
+}
+
+export async function generateBiggiDataTxRef(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/wallet/generate-tx-ref`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to generate reference");
+  return data.tx_ref;
+}
+
+export async function verifyBiggiDataFlutterwavePayment(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/wallet/verify-flutterwave`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Verification failed");
+  return data;
+}
+
 export async function registerUser(payload) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",

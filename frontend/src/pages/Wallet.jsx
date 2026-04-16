@@ -6,7 +6,12 @@ import { useAuth } from "../utils/AuthContext";
 import { getAuthToken } from "../utils/auth";
 import {
   depositBiggiHouseWallet,
+  generateBiggiDataTxRef,
+  getBiggiDataBalance,
+  getBiggiDataDepositFeeSettings,
+  getBiggiDataVirtualAccount,
   getBiggiHouseWallet,
+  verifyBiggiDataFlutterwavePayment,
   withdrawBiggiHouseWallet,
 } from "../services/api";
 
@@ -161,14 +166,22 @@ export default function Wallet() {
   const [wallet, setWallet] = useState(null);
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [error, setError] = useState("");
+  const [biggiDataBalance, setBiggiDataBalance] = useState(null);
+  const [va, setVa] = useState(null);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositLoading, setDepositLoading] = useState(false);
+  const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
 
   useEffect(() => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoadingWallet(true);
-    getBiggiHouseWallet(token)
-      .then((data) => setWallet(data))
+    Promise.all([
+      getBiggiHouseWallet(token).then((data) => setWallet(data)),
+      getBiggiDataBalance(token).then((data) => setBiggiDataBalance(data || null)),
+      getBiggiDataVirtualAccount(token).then((data) => setVa(data)),
+    ])
       .catch((err) => setError(err?.message || "Unable to load wallet."))
       .finally(() => setLoadingWallet(false));
   }, []);
@@ -248,6 +261,162 @@ export default function Wallet() {
                 Withdraw
               </GhostButton>
             </Actions>
+
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "16px",
+                borderRadius: "18px",
+                border: "1px solid rgba(15, 23, 42, 0.08)",
+                background: "#fff",
+              }}
+            >
+              <div style={{ fontWeight: 800, marginBottom: "6px" }}>
+                Fund Biggi Data Balance (Flutterwave)
+              </div>
+              <div style={{ color: "#5b6475", fontSize: "14px" }}>
+                This uses the shared Biggi Data Flutterwave account. Successful payments credit your Biggi Data
+                `mainBalance`.
+              </div>
+              <div style={{ marginTop: "10px", display: "grid", gap: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span style={{ color: "#5b6475", fontSize: "14px" }}>Biggi Data main balance</span>
+                  <strong style={{ fontSize: "14px" }}>
+                    {new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                      maximumFractionDigits: 0,
+                    }).format(Number(biggiDataBalance?.main || 0))}
+                  </strong>
+                </div>
+
+                <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                  Amount to deposit (NGN)
+                  <input
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="e.g. 1000"
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "12px",
+                      border: "1px solid rgba(15, 23, 42, 0.14)",
+                      background: "#fff",
+                    }}
+                  />
+                </label>
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <PrimaryButton
+                    type="button"
+                    disabled={depositLoading || !publicKey}
+                    onClick={async () => {
+                      try {
+                        setError("");
+                        setDepositLoading(true);
+                        const token = getAuthToken();
+                        if (!token) return;
+
+                        const amount = Number(depositAmount || 0);
+                        if (!Number.isFinite(amount) || amount <= 0) {
+                          setError("Enter a valid deposit amount.");
+                          return;
+                        }
+
+                        const feeSettings = await getBiggiDataDepositFeeSettings(token);
+                        const flat = Number(feeSettings?.flatFee || 0);
+                        const pct = Number(feeSettings?.percentFee || 0);
+                        const minFee = Number(feeSettings?.minFee || 0);
+                        const maxFee = Number(feeSettings?.maxFee || 0);
+                        const enabled = feeSettings?.enabled !== false;
+                        let fee = enabled ? flat + (pct > 0 ? (amount * pct) / 100 : 0) : 0;
+                        if (minFee > 0 && fee < minFee) fee = minFee;
+                        if (maxFee > 0 && fee > maxFee) fee = maxFee;
+                        fee = Math.max(0, Math.round(fee));
+                        const total = amount + fee;
+
+                        const tx_ref = await generateBiggiDataTxRef(token);
+
+                        const fw = window.FlutterwaveCheckout;
+                        if (typeof fw !== "function") {
+                          setError("Flutterwave checkout script is not available yet. Refresh and try again.");
+                          return;
+                        }
+
+                        fw({
+                          public_key: publicKey,
+                          tx_ref,
+                          amount: total,
+                          currency: "NGN",
+                          payment_options: "card,banktransfer,ussd",
+                          customer: {
+                            email: user?.email || "member@biggihouse.com",
+                            phonenumber: user?.phoneNumber || "",
+                            name: user?.username || user?.email || "BiggiHouse user",
+                          },
+                          customizations: {
+                            title: "BiggiHouse",
+                            description: "Fund Biggi Data balance",
+                            logo: "",
+                          },
+                          callback: async () => {
+                            await verifyBiggiDataFlutterwavePayment(
+                              { tx_ref, amount },
+                              token
+                            );
+                            const [bal, bhWallet] = await Promise.all([
+                              getBiggiDataBalance(token),
+                              getBiggiHouseWallet(token),
+                            ]);
+                            setBiggiDataBalance(bal || null);
+                            setWallet(bhWallet);
+                          },
+                          onclose: () => {
+                            // user closed modal
+                          },
+                        });
+                      } catch (err) {
+                        setError(err?.message || "Deposit failed.");
+                      } finally {
+                        setDepositLoading(false);
+                      }
+                    }}
+                  >
+                    {depositLoading ? "Opening..." : "Pay with Flutterwave"}
+                  </PrimaryButton>
+                  {!publicKey && (
+                    <div style={{ color: "#b45309", fontSize: "13px" }}>
+                      Add `VITE_FLUTTERWAVE_PUBLIC_KEY` to enable Flutterwave checkout.
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginTop: "6px" }}>
+                  <div style={{ fontWeight: 700, marginBottom: "6px" }}>Static virtual account (bank transfer)</div>
+                  {va?.success && va?.mode === "static" ? (
+                    <div style={{ display: "grid", gap: "6px", color: "#111827", fontSize: "14px" }}>
+                      <div>
+                        <span style={{ color: "#5b6475" }}>Bank: </span>
+                        <strong>{va.account.bankName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: "#5b6475" }}>Account number: </span>
+                        <strong>{va.account.accountNumber}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: "#5b6475" }}>Account name: </span>
+                        <strong>{va.account.accountName}</strong>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ color: "#5b6475", fontSize: "14px" }}>
+                      {va?.message ||
+                        "Static virtual account may be disabled or your profile may be missing NIN."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {loadingWallet && (
               <p style={{ marginTop: "8px", color: "#5b6475" }}>Loading wallet...</p>
             )}
