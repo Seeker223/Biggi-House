@@ -1,17 +1,15 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
 import { useAuth } from "../utils/AuthContext";
 import { getAuthToken } from "../utils/auth";
 import {
-  depositBiggiHouseWallet,
-  generateBiggiDataTxRef,
-  getBiggiDataBalance,
-  getBiggiDataDepositFeeSettings,
-  getBiggiDataVirtualAccount,
+  generateBiggiHouseTxRef,
+  getBiggiHouseDepositFeeSettings,
+  getBiggiHouseVirtualAccount,
   getBiggiHouseWallet,
-  verifyBiggiDataFlutterwavePayment,
+  verifyBiggiHouseFlutterwavePayment,
   withdrawBiggiHouseWallet,
 } from "../services/api";
 
@@ -166,24 +164,27 @@ export default function Wallet() {
   const [wallet, setWallet] = useState(null);
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [error, setError] = useState("");
-  const [biggiDataBalance, setBiggiDataBalance] = useState(null);
   const [va, setVa] = useState(null);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
   const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
+  const fundPanelRef = useRef(null);
+  const fundInputRef = useRef(null);
 
   useEffect(() => {
     const token = getAuthToken();
     if (!token) return;
 
     setLoadingWallet(true);
-    Promise.all([
-      getBiggiHouseWallet(token).then((data) => setWallet(data)),
-      getBiggiDataBalance(token).then((data) => setBiggiDataBalance(data || null)),
-      getBiggiDataVirtualAccount(token).then((data) => setVa(data)),
-    ])
+    getBiggiHouseWallet(token)
+      .then((data) => setWallet(data))
       .catch((err) => setError(err?.message || "Unable to load wallet."))
       .finally(() => setLoadingWallet(false));
+
+    // Optional: older backends may not expose the VA endpoint yet.
+    getBiggiHouseVirtualAccount(token)
+      .then((data) => setVa(data))
+      .catch(() => null);
   }, []);
 
   const walletBalance = Number(wallet?.balance || 0);
@@ -231,16 +232,14 @@ export default function Wallet() {
             />
             <Actions>
               <PrimaryButton
+                type="button"
                 onClick={() => {
-                  const input = window.prompt("Enter deposit amount (NGN):", "1000");
-                  const amount = Number(input || 0);
-                  if (!Number.isFinite(amount) || amount <= 0) return;
-                  setError("");
-                  const token = getAuthToken();
-                  if (!token) return;
-                  depositBiggiHouseWallet(amount, token)
-                    .then(() => getBiggiHouseWallet(token).then((data) => setWallet(data)))
-                    .catch((err) => setError(err?.message || "Deposit failed."));
+                  // UX: take the user to the funding panel (Flutterwave / VA).
+                  const node = fundPanelRef.current;
+                  if (node && typeof node.scrollIntoView === "function") {
+                    node.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                  setTimeout(() => fundInputRef.current?.focus?.(), 200);
                 }}
               >
                 Deposit
@@ -263,6 +262,7 @@ export default function Wallet() {
             </Actions>
 
             <div
+              ref={fundPanelRef}
               style={{
                 marginTop: "16px",
                 padding: "16px",
@@ -272,27 +272,21 @@ export default function Wallet() {
               }}
             >
               <div style={{ fontWeight: 800, marginBottom: "6px" }}>
-                Fund Biggi Data Balance (Flutterwave)
+                Fund BiggiHouse Wallet (Flutterwave)
               </div>
               <div style={{ color: "#5b6475", fontSize: "14px" }}>
-                This uses the shared Biggi Data Flutterwave account. Successful payments credit your Biggi Data
-                `mainBalance`.
+                Payments here are recorded in your BiggiHouse wallet only (independent from Biggi Data).
               </div>
               <div style={{ marginTop: "10px", display: "grid", gap: "10px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                  <span style={{ color: "#5b6475", fontSize: "14px" }}>Biggi Data main balance</span>
-                  <strong style={{ fontSize: "14px" }}>
-                    {new Intl.NumberFormat("en-NG", {
-                      style: "currency",
-                      currency: "NGN",
-                      maximumFractionDigits: 0,
-                    }).format(Number(biggiDataBalance?.main || 0))}
-                  </strong>
+                  <span style={{ color: "#5b6475", fontSize: "14px" }}>Current wallet balance</span>
+                  <strong style={{ fontSize: "14px" }}>{formatCurrency(walletBalance)}</strong>
                 </div>
 
                 <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
-                  Amount to deposit (NGN)
+                  Amount to fund (NGN)
                   <input
+                    ref={fundInputRef}
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     placeholder="e.g. 1000"
@@ -318,23 +312,29 @@ export default function Wallet() {
 
                         const amount = Number(depositAmount || 0);
                         if (!Number.isFinite(amount) || amount <= 0) {
-                          setError("Enter a valid deposit amount.");
+                          setError("Enter a valid funding amount.");
                           return;
                         }
 
-                        const feeSettings = await getBiggiDataDepositFeeSettings(token);
-                        const flat = Number(feeSettings?.flatFee || 0);
-                        const pct = Number(feeSettings?.percentFee || 0);
-                        const minFee = Number(feeSettings?.minFee || 0);
-                        const maxFee = Number(feeSettings?.maxFee || 0);
-                        const enabled = feeSettings?.enabled !== false;
-                        let fee = enabled ? flat + (pct > 0 ? (amount * pct) / 100 : 0) : 0;
-                        if (minFee > 0 && fee < minFee) fee = minFee;
-                        if (maxFee > 0 && fee > maxFee) fee = maxFee;
-                        fee = Math.max(0, Math.round(fee));
+                        let fee = 0;
+                        try {
+                          const feeSettings = await getBiggiHouseDepositFeeSettings(token);
+                          const flat = Number(feeSettings?.flatFee || 0);
+                          const pct = Number(feeSettings?.percentFee || 0);
+                          const minFee = Number(feeSettings?.minFee || 0);
+                          const maxFee = Number(feeSettings?.maxFee || 0);
+                          const enabled = feeSettings?.enabled !== false;
+                          fee = enabled ? flat + (pct > 0 ? (amount * pct) / 100 : 0) : 0;
+                          if (minFee > 0 && fee < minFee) fee = minFee;
+                          if (maxFee > 0 && fee > maxFee) fee = maxFee;
+                          fee = Math.max(0, Math.round(fee));
+                        } catch {
+                          // If the endpoint isn't available yet, we'll proceed with no fee and let the backend respond.
+                          fee = 0;
+                        }
                         const total = amount + fee;
 
-                        const tx_ref = await generateBiggiDataTxRef(token);
+                        const tx_ref = await generateBiggiHouseTxRef(token);
 
                         const fw = window.FlutterwaveCheckout;
                         if (typeof fw !== "function") {
@@ -355,20 +355,18 @@ export default function Wallet() {
                           },
                           customizations: {
                             title: "BiggiHouse",
-                            description: "Fund Biggi Data balance",
+                            description: "Fund BiggiHouse wallet",
                             logo: "",
                           },
                           callback: async () => {
-                            await verifyBiggiDataFlutterwavePayment(
-                              { tx_ref, amount },
-                              token
-                            );
-                            const [bal, bhWallet] = await Promise.all([
-                              getBiggiDataBalance(token),
+                            await verifyBiggiHouseFlutterwavePayment({ tx_ref, amount }, token);
+                            const [bhWallet, bhVa] = await Promise.all([
                               getBiggiHouseWallet(token),
+                              getBiggiHouseVirtualAccount(token).catch(() => null),
                             ]);
-                            setBiggiDataBalance(bal || null);
                             setWallet(bhWallet);
+                            if (bhVa) setVa(bhVa);
+                            setDepositAmount("");
                           },
                           onclose: () => {
                             // user closed modal
@@ -383,6 +381,22 @@ export default function Wallet() {
                   >
                     {depositLoading ? "Opening..." : "Pay with Flutterwave"}
                   </PrimaryButton>
+                  <GhostButton
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setError("");
+                        const token = getAuthToken();
+                        if (!token) return;
+                        const data = await getBiggiHouseVirtualAccount(token, true);
+                        setVa(data);
+                      } catch (err) {
+                        setError(err?.message || "Unable to refresh virtual account.");
+                      }
+                    }}
+                  >
+                    Refresh VA
+                  </GhostButton>
                   {!publicKey && (
                     <div style={{ color: "#b45309", fontSize: "13px" }}>
                       Add `VITE_FLUTTERWAVE_PUBLIC_KEY` to enable Flutterwave checkout.
@@ -410,7 +424,7 @@ export default function Wallet() {
                   ) : (
                     <div style={{ color: "#5b6475", fontSize: "14px" }}>
                       {va?.message ||
-                        "Static virtual account may be disabled or your profile may be missing NIN."}
+                        "Your BiggiHouse virtual account isn't available yet. You can still fund your wallet via Flutterwave above."}
                     </div>
                   )}
                 </div>

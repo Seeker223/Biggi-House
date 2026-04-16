@@ -62,6 +62,47 @@ export async function getBiggiHouseWallet(token) {
   return data.wallet;
 }
 
+export async function getBiggiHouseVirtualAccount(token, refresh = false) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const url = `${API_BASE}/biggihouse/wallet/virtual-account${refresh ? "?refresh=true" : ""}`;
+  const res = await fetch(url, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load virtual account");
+  return data;
+}
+
+export async function generateBiggiHouseTxRef(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet/generate-tx-ref`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to generate reference");
+  return data.tx_ref;
+}
+
+export async function verifyBiggiHouseFlutterwavePayment(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet/verify-flutterwave`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Verification failed");
+  return data;
+}
+
+export async function getBiggiHouseDepositFeeSettings(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/wallet/deposit-fee-settings`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load fee settings");
+  return data.settings || data.feeSettings || data;
+}
+
 export async function depositBiggiHouseWallet(amount, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
