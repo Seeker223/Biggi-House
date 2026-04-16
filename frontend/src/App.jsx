@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import FAQ from "./pages/FAQ";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import CPanel from "./pages/CPanel";
 import { useAuth } from "./utils/AuthContext";
 
 const AppShell = styled.div`
@@ -62,6 +63,16 @@ function App() {
           <Route
             path="/payment-success"
             element={user ? <PaymentSuccess /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/c-panel"
+            element={
+              user && String(user?.role || "").toLowerCase() === "admin" ? (
+                <CPanel />
+              ) : (
+                <Navigate to={user ? "/dashboard" : "/"} replace />
+              )
+            }
           />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

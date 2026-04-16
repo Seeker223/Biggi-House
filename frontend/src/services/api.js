@@ -156,6 +156,147 @@ export async function getBiggiHouseVendors(token) {
   return data.vendors || [];
 }
 
+export async function getBiggiHouseAdminOverview(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/overview`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load admin overview");
+  return data.overview;
+}
+
+export async function getBiggiHouseAdminUsers(token, params = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const q = new URLSearchParams();
+  if (params.q) q.set("q", params.q);
+  if (params.page) q.set("page", String(params.page));
+  if (params.limit) q.set("limit", String(params.limit));
+  const res = await fetch(`${API_BASE}/biggihouse/admin/users${q.toString() ? `?${q}` : ""}`, {
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load users");
+  return data;
+}
+
+export async function updateBiggiHouseAdminUser(userId, payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/users/${userId}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to update user");
+  return data.user;
+}
+
+export async function getBiggiHouseAdminHouses(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/houses`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load houses");
+  return data.houses || [];
+}
+
+export async function createBiggiHouseAdminHouse(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/houses`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to create house");
+  return data.house;
+}
+
+export async function updateBiggiHouseAdminHouse(houseId, payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/houses/${houseId}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to update house");
+  return data.house;
+}
+
+export async function deleteBiggiHouseAdminHouse(houseId, token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/houses/${houseId}`, {
+    method: "DELETE",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to delete house");
+  return data;
+}
+
+export async function getBiggiHouseAdminMemberships(token, params = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const q = new URLSearchParams();
+  if (params.houseId) q.set("houseId", params.houseId);
+  if (params.page) q.set("page", String(params.page));
+  if (params.limit) q.set("limit", String(params.limit));
+  const res = await fetch(
+    `${API_BASE}/biggihouse/admin/memberships${q.toString() ? `?${q}` : ""}`,
+    { headers }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load memberships");
+  return data;
+}
+
+export async function deleteBiggiHouseAdminMembership(membershipId, token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/memberships/${membershipId}`, {
+    method: "DELETE",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to remove membership");
+  return data;
+}
+
+export async function getBiggiHouseAdminVendorRequests(token, params = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const q = new URLSearchParams();
+  if (params.status) q.set("status", params.status);
+  if (params.page) q.set("page", String(params.page));
+  if (params.limit) q.set("limit", String(params.limit));
+  const res = await fetch(
+    `${API_BASE}/biggihouse/admin/vendor-requests${q.toString() ? `?${q}` : ""}`,
+    { headers }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load requests");
+  return data;
+}
+
+export async function updateBiggiHouseAdminVendorRequest(requestId, payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/vendor-requests/${requestId}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to update request");
+  return data.request;
+}
+
 export async function createBiggiHouseVendorRequest(payload, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;

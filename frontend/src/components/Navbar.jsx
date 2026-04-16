@@ -175,6 +175,7 @@ const MobileLogout = styled.button`
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
   const navigate = useNavigate();
   const userId = user?.id || user?._id || user?.userId;
   const houses = getStoredHouses(userId);
@@ -214,6 +215,7 @@ export default function Navbar() {
               <NavItem to="/wallet">Wallet</NavItem>
               <NavItem to="/profile">Profile</NavItem>
               <NavItem to="/dashboard">Dashboard</NavItem>
+              {isAdmin && <NavItem to="/c-panel">C-Panel</NavItem>}
               <HouseLabel title={houseLabel}>{houseLabel}</HouseLabel>
             </>
           )}
@@ -263,6 +265,11 @@ export default function Navbar() {
                 <NavItem to="/dashboard" onClick={() => setOpen(false)}>
                   Dashboard
                 </NavItem>
+                {isAdmin && (
+                  <NavItem to="/c-panel" onClick={() => setOpen(false)}>
+                    C-Panel
+                  </NavItem>
+                )}
               </>
             )}
           </MobileLinks>
