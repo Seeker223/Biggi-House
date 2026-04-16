@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import WalletCard from "../components/WalletCard";
@@ -108,7 +108,7 @@ const ProgressWrap = styled.div`
 `;
 
 const Progress = styled.div`
-  width: 60%;
+  width: ${({ $value }) => `${Math.max(0, Math.min(100, Number($value || 0)))}%`};
   height: 100%;
   background: ${({ theme }) => theme.colors.primary};
 `;
@@ -146,12 +146,14 @@ export default function Dashboard() {
     note: "",
   });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    const token = getAuthToken();
+  const token = useMemo(() => getAuthToken(), []);
+
+  const reload = useCallback(() => {
     if (!token) return;
-
     setLoadingData(true);
+    setError("");
     Promise.all([
       getBiggiHouseWallet(token).then((data) => setWallet(data)),
       getBiggiHouseVendors(token).then((data) => setVendors(data || [])),
@@ -160,11 +162,50 @@ export default function Dashboard() {
     ])
       .catch((err) => setError(err?.message || "Unable to load dashboard data."))
       .finally(() => setLoadingData(false));
-  }, []);
+  }, [token]);
+
+  useEffect(() => {
+    reload();
+
+    const onFocus = () => reload();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [reload]);
 
   const walletBalance = Number(wallet?.balance || 0);
   const latestHouse = memberships[0]?.house || null;
   const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
+  const weeklyPayoutTime = `Fridays ${"\u00B7"} 6:00 PM`;
+
+  const nextPayout = useMemo(() => {
+    const now = new Date();
+    const next = new Date(now);
+    const targetDow = 5; // Fri
+    const currentDow = next.getDay();
+    let addDays = (targetDow - currentDow + 7) % 7;
+    if (addDays === 0 && next.getHours() >= 18) addDays = 7;
+    next.setDate(next.getDate() + addDays);
+    next.setHours(18, 0, 0, 0);
+    return next.toLocaleString("en-NG", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
+  const purchasesThisWeek = Number(eligibility?.purchasesThisWeek || 0);
+  const eligible = Boolean(eligibility?.eligible);
+  const eligibilityProgress = eligible ? 100 : Math.min(80, purchasesThisWeek * 50);
 
   const handleLogout = () => {
     logout();
@@ -190,6 +231,13 @@ export default function Dashboard() {
               {user.email}
             </p>
           )}
+          {loadingData && (
+            <p style={{ color: "#5b6475", marginTop: "10px" }}>Refreshing...</p>
+          )}
+          {error && <p style={{ color: "#c02626", marginTop: "10px" }}>{error}</p>}
+          {success && (
+            <p style={{ color: "#15803d", marginTop: "10px" }}>{success}</p>
+          )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {memberships.length > 0 && (
@@ -204,35 +252,54 @@ export default function Dashboard() {
           balance={walletBalance}
           currentHouse={latestHouse ? `House ${latestHouse.number}` : "Not joined"}
           lastBalance={latestJoin?.meta?.previousBalance ?? walletBalance}
+          weeklyPayoutTime={weeklyPayoutTime}
         />
         <Card>
           <CardLabel>Current house</CardLabel>
           <CardValue>
             {latestHouse ? `House ${latestHouse.number}` : "Not joined"}
           </CardValue>
+          <ProgressWrap>
+            <Progress $value={memberships.length ? 70 : 15} />
+          </ProgressWrap>
+          <p style={{ color: "#5b6475", marginTop: "10px" }}>
+            {memberships.length ? "Your weekly cycle is active." : "Join a house to start."}
+          </p>
         </Card>
         <Card>
           <CardLabel>Next payout</CardLabel>
-          <CardValue>June 30, 2026</CardValue>
+          <CardValue>{nextPayout}</CardValue>
+          <p style={{ color: "#5b6475", marginTop: "10px" }}>
+            Weekly payout time: {weeklyPayoutTime}
+          </p>
         </Card>
       </Grid>
 
       <Grid style={{ marginTop: "24px" }}>
         <Card>
-          <CardLabel>Cycle progress</CardLabel>
-          <CardValue>6 of 10 weeks</CardValue>
+          <CardLabel>Weekly eligibility</CardLabel>
+          <CardValue>{eligible ? "Eligible" : "Not eligible"}</CardValue>
           <ProgressWrap>
-            <Progress />
+            <Progress $value={eligibilityProgress} />
           </ProgressWrap>
           <p style={{ color: "#5b6475", marginTop: "10px" }}>
-            Payout position: 4 of 10
+            Purchases this week for {eligibility?.phoneNumber || "your number"}:{" "}
+            <strong>{purchasesThisWeek}</strong>
           </p>
         </Card>
         <Card>
-          <CardLabel>Contribution status</CardLabel>
-          <CardValue>Paid for April</CardValue>
+          <CardLabel>BiggiHouse wallet</CardLabel>
+          <CardValue>
+            {new Intl.NumberFormat("en-NG", {
+              style: "currency",
+              currency: "NGN",
+              maximumFractionDigits: 0,
+            }).format(walletBalance)}
+          </CardValue>
           <p style={{ color: "#5b6475", marginTop: "10px" }}>
-            Next contribution due: May 5, 2026
+            {latestJoin?.meta?.houseNumber
+              ? `Last paid: House ${latestJoin.meta.houseNumber}`
+              : "No house payment yet."}
           </p>
         </Card>
         <Card>
@@ -297,6 +364,9 @@ export default function Dashboard() {
                 ? "Add phone number"
                 : "Not eligible"}
             </p>
+            <ProgressWrap>
+              <Progress $value={eligibilityProgress} />
+            </ProgressWrap>
             {!eligibility?.eligible && (
               <>
                 <SecondaryButton onClick={() => setRequestVendorOpen(true)}>
@@ -307,9 +377,56 @@ export default function Dashboard() {
                 </p>
               </>
             )}
-            {loadingData && <p style={{ color: "#5b6475" }}>Loading...</p>}
-            {error && <p style={{ color: "#c02626" }}>{error}</p>}
           </div>
+        </Card>
+        <Card>
+          <CardLabel>Vendors (Biggi Data merchants)</CardLabel>
+          {vendors.length ? (
+            <div style={{ marginTop: "12px", display: "grid", gap: "10px" }}>
+              {vendors.slice(0, 6).map((vendor) => (
+                <div
+                  key={vendor.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    padding: "12px 14px",
+                    borderRadius: "14px",
+                    border: "1px solid rgba(15, 23, 42, 0.08)",
+                    background: "#fff",
+                  }}
+                >
+                  <div style={{ display: "grid", gap: "2px" }}>
+                    <strong style={{ fontSize: "14px" }}>{vendor.username}</strong>
+                    <span style={{ color: "#5b6475", fontSize: "13px" }}>
+                      {vendor.phoneNumber}
+                    </span>
+                  </div>
+                  <SecondaryButton
+                    onClick={() => {
+                      setRequestForm((prev) => ({
+                        ...prev,
+                        vendorUserId: vendor.id,
+                      }));
+                      setRequestVendorOpen(true);
+                    }}
+                  >
+                    Request
+                  </SecondaryButton>
+                </div>
+              ))}
+              {vendors.length > 6 && (
+                <p style={{ color: "#5b6475", fontSize: "13px" }}>
+                  Showing 6 of {vendors.length} vendors.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p style={{ color: "#5b6475", marginTop: "10px" }}>
+              No vendors available yet.
+            </p>
+          )}
         </Card>
       </Grid>
 
@@ -383,6 +500,7 @@ export default function Dashboard() {
               <Button
                 onClick={() => {
                   setError("");
+                  setSuccess("");
                   const token = getAuthToken();
                   if (!token) return;
                   if (!requestForm.vendorUserId || !requestForm.phoneNumber) {
@@ -401,6 +519,8 @@ export default function Dashboard() {
                   )
                     .then(() => {
                       setRequestVendorOpen(false);
+                      setSuccess("Vendor request sent. The vendor was notified in Biggi Data.");
+                      reload();
                     })
                     .catch((err) => setError(err?.message || "Request failed."));
                 }}

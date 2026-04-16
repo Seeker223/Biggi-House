@@ -1,7 +1,9 @@
 import styled from "styled-components";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Container from "../components/Container";
-import { getStoredHouses } from "../utils/auth";
+import { getAuthToken, setRefreshToken } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
+import { getBiggiHouseMemberships, getBiggiHouseWallet, getMe } from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 40px 0 60px;
@@ -153,10 +155,53 @@ const DetailValue = styled.span`
 `;
 
 export default function Profile() {
-  const { user } = useAuth();
-  const userId = user?.id || user?._id || user?.userId;
-  const houses = getStoredHouses(userId);
-  const displayName = user?.name || user?.username || "Member";
+  const { user, updateUser } = useAuth();
+  const [profileUser, setProfileUser] = useState(user);
+  const [wallet, setWallet] = useState(null);
+  const [memberships, setMemberships] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const token = useMemo(() => getAuthToken(), []);
+
+  const reload = useCallback(() => {
+    if (!token) return;
+    setLoading(true);
+    setError("");
+
+    Promise.all([
+      getMe(token).then((data) => {
+        if (data?.user) {
+          setProfileUser(data.user);
+          updateUser(data.user);
+        }
+        if (data?.refreshToken) setRefreshToken(data.refreshToken);
+      }),
+      getBiggiHouseWallet(token).then((data) => setWallet(data)),
+      getBiggiHouseMemberships(token).then((data) => setMemberships(data || [])),
+    ])
+      .catch((err) => setError(err?.message || "Unable to load profile details."))
+      .finally(() => setLoading(false));
+  }, [token, updateUser]);
+
+  useEffect(() => {
+    reload();
+
+    const onFocus = () => reload();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [reload]);
+
+  const housesJoined = memberships.length;
+  const displayName = profileUser?.name || profileUser?.username || "Member";
   const initials =
     displayName
       ?.split(" ")
@@ -166,7 +211,8 @@ export default function Profile() {
       .slice(0, 2) || "BH";
 
   const registrationNumber =
-    user?.referralCode || `BH-${String(user?.id || "").slice(-6).toUpperCase()}`;
+    profileUser?.referralCode ||
+    `BH-${String(profileUser?.id || "").slice(-6).toUpperCase()}`;
 
   const formatDate = (value) => {
     if (!value) return "Not provided";
@@ -181,20 +227,21 @@ export default function Profile() {
 
   const primaryDetails = [
     ["Registration number", registrationNumber || "Pending"],
-    ["Username", user?.username || "Not provided"],
-    ["Email address", user?.email || "Not provided"],
-    ["Phone number", user?.phoneNumber || "Not provided"],
-    ["State", user?.state || "Not provided"],
-    ["Date of birth", formatDate(user?.birthDate)],
+    ["Username", profileUser?.username || "Not provided"],
+    ["Email address", profileUser?.email || "Not provided"],
+    ["Phone number", profileUser?.phoneNumber || "Not provided"],
+    ["State", profileUser?.state || "Not provided"],
+    ["Date of birth", formatDate(profileUser?.birthDate)],
   ];
 
   const identityDetails = [
-    ["NIN", user?.nin || "Not provided"],
-    ["BVN", user?.bvn || "Not provided"],
-    ["Referral code", user?.referralCode || "Not provided"],
-    ["Referred by", user?.referredByCode || "Not provided"],
-    ["User role", user?.userRole || user?.role || "User"],
-    ["Verification", user?.isVerified ? "Verified" : "Pending"],
+    ["NIN", profileUser?.nin || "Not provided"],
+    ["BVN", profileUser?.bvn || "Not provided"],
+    ["Referral code", profileUser?.referralCode || "Not provided"],
+    ["Referred by", profileUser?.referredByCode || "Not provided"],
+    ["User role", profileUser?.userRole || profileUser?.role || "User"],
+    ["Verification", profileUser?.isVerified ? "Verified" : "Pending"],
+    ["Allowed apps", Array.isArray(profileUser?.allowedApps) ? profileUser.allowedApps.join(", ") : "Not set"],
   ];
 
   return (
@@ -203,8 +250,16 @@ export default function Profile() {
         <div>
           <Title>Profile</Title>
           <Sub>Manage your account and view your participation details.</Sub>
+          {loading && (
+            <Sub style={{ marginTop: "10px" }}>Refreshing...</Sub>
+          )}
+          {error && (
+            <Sub style={{ marginTop: "10px", color: "#c02626" }}>{error}</Sub>
+          )}
         </div>
-        <Badge>{user?.isVerified ? "Verified member" : "Pending verification"}</Badge>
+        <Badge>
+          {profileUser?.isVerified ? "Verified member" : "Pending verification"}
+        </Badge>
       </Header>
 
       <Grid>
@@ -213,17 +268,27 @@ export default function Profile() {
             <Avatar>{initials.toUpperCase()}</Avatar>
             <div>
               <h3 style={{ marginBottom: "4px" }}>{displayName}</h3>
-              <Sub>{user?.email || "member@biggihouse.com"}</Sub>
+              <Sub>{profileUser?.email || "member@biggihouse.com"}</Sub>
             </div>
           </div>
           <InfoList>
             <InfoRow>
               <span>Membership status</span>
-              <InfoValue>{user?.isVerified ? "Active" : "Pending"}</InfoValue>
+              <InfoValue>{profileUser?.isVerified ? "Active" : "Pending"}</InfoValue>
             </InfoRow>
             <InfoRow>
               <span>Joined houses</span>
-              <InfoValue>{houses.length}</InfoValue>
+              <InfoValue>{housesJoined}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <span>BiggiHouse wallet</span>
+              <InfoValue>
+                {new Intl.NumberFormat("en-NG", {
+                  style: "currency",
+                  currency: "NGN",
+                  maximumFractionDigits: 0,
+                }).format(Number(wallet?.balance || 0))}
+              </InfoValue>
             </InfoRow>
             <InfoRow>
               <span>Registration number</span>
@@ -232,26 +297,41 @@ export default function Profile() {
           </InfoList>
           <HighlightStat>
             <span>Total houses joined</span>
-            <span>{houses.length}</span>
+            <span>{housesJoined}</span>
           </HighlightStat>
         </Card>
 
         <Card>
           <SectionTitle>Recent activity</SectionTitle>
-          <Activity>
-            {[
-              { label: "Contribution received", value: "\u20A615,000", date: "Apr 5" },
-              { label: "House joined", value: "House 3", date: "Mar 18" },
-              { label: "Payout scheduled", value: "Jun 30", date: "Mar 10" },
-            ].map((item) => (
-              <ActivityItem key={item.date}>
-                <span>
-                  {item.label} {"\u00B7"} {item.date}
-                </span>
-                <strong>{item.value}</strong>
-              </ActivityItem>
-            ))}
-          </Activity>
+          {Array.isArray(wallet?.transactions) && wallet.transactions.length ? (
+            <Activity>
+              {wallet.transactions.slice(0, 5).map((tx) => (
+                <ActivityItem key={tx.reference || tx._id || String(tx.date)}>
+                  <span>
+                    {tx.type === "deposit"
+                      ? "Deposit"
+                      : tx.type === "withdraw"
+                      ? "Withdraw"
+                      : "House contribution"}{" "}
+                    {"\u00B7"}{" "}
+                    {new Date(tx.date || Date.now()).toLocaleDateString("en-NG", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                  <strong>
+                    {new Intl.NumberFormat("en-NG", {
+                      style: "currency",
+                      currency: "NGN",
+                      maximumFractionDigits: 0,
+                    }).format(Number(tx.amount || 0))}
+                  </strong>
+                </ActivityItem>
+              ))}
+            </Activity>
+          ) : (
+            <Sub>No activity yet.</Sub>
+          )}
         </Card>
       </Grid>
 
