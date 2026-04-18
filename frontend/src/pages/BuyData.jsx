@@ -187,6 +187,27 @@ export default function BuyData() {
     loadPlans();
   }, [user, navigate]);
 
+  // Auto-select first plan when plans load or network changes
+  useEffect(() => {
+    if (plans.length === 0) return;
+    
+    const plansForCurrentNetwork = plans.filter(
+      (p) => p.network?.toLowerCase() === network.toLowerCase()
+    );
+    
+    if (plansForCurrentNetwork.length > 0) {
+      // If current planId is valid for this network, keep it
+      if (plansForCurrentNetwork.some((p) => p.plan_id === planId)) {
+        return;
+      }
+      // Otherwise, select the first plan for this network
+      setPlanId(plansForCurrentNetwork[0].plan_id);
+    } else {
+      // No plans for this network, clear selection
+      setPlanId("");
+    }
+  }, [plans, network]);
+
   const loadPlans = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -208,8 +229,11 @@ export default function BuyData() {
         ? data.plans.filter((p) => p.active && p.network && p.amount)
         : [];
       setPlans(filtered);
+      setError(""); // Clear error on successful load
       if (filtered.length > 0) {
-        setPlanId(filtered[0].plan_id);
+        // Set first MTN plan as default
+        const mtnPlan = filtered.find((p) => p.network?.toLowerCase() === "mtn");
+        setPlanId(mtnPlan?.plan_id || filtered[0].plan_id);
       }
     } catch (err) {
       setError(err.message || "Failed to load plans");
@@ -224,10 +248,10 @@ export default function BuyData() {
     return digits.slice(0, 11);
   };
 
-  const selectedPlan = plans.find((p) => p.plan_id === planId);
   const networkPlans = plans.filter(
     (p) => p.network?.toLowerCase() === network.toLowerCase()
   );
+  const selectedPlan = networkPlans.find((p) => p.plan_id === planId);
   const isValid = phone.length === 11 && planId && selectedPlan;
 
   const handleSubmit = async (e) => {
@@ -311,9 +335,13 @@ export default function BuyData() {
             <Select
               value={network}
               onChange={(e) => {
-                setNetwork(e.target.value);
-                const planInNetwork = networkPlans.find((p) => p.network?.toLowerCase() === e.target.value.toLowerCase());
-                setPlanId(planInNetwork?.plan_id || "");
+                const newNetwork = e.target.value;
+                setNetwork(newNetwork);
+                // Find first plan for the new network from already-filtered plans
+                const plansForNetwork = plans.filter(
+                  (p) => p.network?.toLowerCase() === newNetwork.toLowerCase()
+                );
+                setPlanId(plansForNetwork.length > 0 ? plansForNetwork[0].plan_id : "");
               }}
               disabled={loading}
             >
