@@ -452,9 +452,9 @@ export default function Home() {
         <HeroGrid>
           <HeroCopy>
             {user ? (
-              <AnimatedTitle>Welcome to Biggi House</AnimatedTitle>
+              <AnimatedTitle>Join biggi house and enjoy biggi rewards, for recharging biggi data bundles.</AnimatedTitle>
             ) : (
-              <Title>Save together. Earn together.</Title>
+              <Title>Join biggi house and enjoy biggi rewards, for recharging biggi data bundles.</Title>
             )}
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,

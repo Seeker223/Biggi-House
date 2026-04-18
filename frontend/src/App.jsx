@@ -27,18 +27,31 @@ const Main = styled.main`
   padding: 0 0 64px;
 `;
 
+const Banner = styled.div`
+  width: 100%;
+  padding: 16px 20px;
+  background: #fff5c2;
+  color: #3b2f0b;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 0 0 16px 16px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+`;
+
 function App() {
   const { user, loading } = useAuth();
   const location = useLocation();
   const hideNav = ["/login", "/signup", "/forgot-password", "/verify-email"].includes(
     location.pathname
   );
+  const showBanner = user && !hideNav;
   if (loading) {
     return null;
   }
   return (
     <AppShell>
       {!hideNav && <Navbar />}
+      {showBanner && <Banner>Welcome to Biggi House</Banner>}
       <Main>
         <Routes>
           <Route path="/" element={<Home />} />
