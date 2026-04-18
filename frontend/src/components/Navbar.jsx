@@ -212,6 +212,7 @@ export default function Navbar() {
           {user && (
             <>
               <NavItem to="/houses">Houses</NavItem>
+              <NavItem to="/subscription">Subscription</NavItem>
               <NavItem to="/wallet">Wallet</NavItem>
               <NavItem to="/profile">Profile</NavItem>
               <NavItem to="/dashboard">Dashboard</NavItem>
@@ -255,6 +256,9 @@ export default function Navbar() {
               <>
                 <NavItem to="/houses" onClick={() => setOpen(false)}>
                   Houses
+                </NavItem>
+                <NavItem to="/subscription" onClick={() => setOpen(false)}>
+                  Subscription
                 </NavItem>
                 <NavItem to="/wallet" onClick={() => setOpen(false)}>
                   Wallet

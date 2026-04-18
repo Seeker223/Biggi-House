@@ -338,6 +338,53 @@ export async function getBiggiDataVirtualAccount(token, refresh = false) {
   return data;
 }
 
+// Subscription endpoints
+export async function getSubscriptionStatus(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/subscription/status`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to fetch subscription status");
+  return data;
+}
+
+export async function subscribe(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/subscription/subscribe`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to subscribe");
+  return data;
+}
+
+export async function cancelSubscription(token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/subscription/cancel`, {
+    method: "POST",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to cancel subscription");
+  return data;
+}
+
+export async function renewSubscription(token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/subscription/renew`, {
+    method: "POST",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to renew subscription");
+  return data;
+}
+
 export async function generateBiggiDataTxRef(token) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;

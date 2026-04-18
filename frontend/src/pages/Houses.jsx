@@ -13,6 +13,7 @@ import {
   getBiggiHouseVendors,
   getBiggiHouseWallet,
   joinBiggiHouseHouse,
+  getSubscriptionStatus,
 } from "../services/api";
 
 const PageHeader = styled.div`
@@ -167,6 +168,8 @@ export default function Houses() {
   const [vendors, setVendors] = useState([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [vendorForm, setVendorForm] = useState({
     vendorUserId: "",
     phoneNumber: user?.phoneNumber || "",
@@ -207,6 +210,7 @@ export default function Houses() {
       getBiggiHouseMemberships(token).then((items) => setMemberships(items || [])),
       getBiggiHouseEligibility(token).then((data) => setEligibility(data)),
       getBiggiHouseVendors(token).then((items) => setVendors(items || [])),
+      getSubscriptionStatus(token).then((data) => setSubscriptionStatus(data)),
     ])
       .catch((err) => {
         setError(err.message || "Unable to load houses right now.");
@@ -245,6 +249,14 @@ export default function Houses() {
       navigate("/login");
       return;
     }
+
+    // Check subscription first
+    if (!subscriptionStatus?.isActive) {
+      setSelected(house);
+      setSubscriptionOpen(true);
+      return;
+    }
+
     if (joinedHouseIds.has(String(house.id))) {
       setError(`You have already joined House ${house.number}.`);
       return;
@@ -622,6 +634,47 @@ export default function Houses() {
               aria-label="Send vendor request"
               >
                 {loading ? "Sending..." : "Send request"}
+              </PrimaryButton>
+            </ModalActions>
+          </ModalCard>
+        </ModalBackdrop>
+      )}
+
+      {subscriptionOpen && (
+        <ModalBackdrop>
+          <ModalCard>
+            <h2>Subscription Required</h2>
+            <p style={{ color: "#5b6475" }}>
+              You need an active subscription to join a house. Subscribe for just ₦100/month to access
+              all houses and start saving.
+            </p>
+            <ModalRow>
+              <span>Monthly Fee</span>
+              <strong>₦100</strong>
+            </ModalRow>
+            <ModalRow>
+              <span>Status</span>
+              <strong style={{ color: "#ef4444" }}>No Active Subscription</strong>
+            </ModalRow>
+            <ModalActions>
+              <GhostButton
+                type="button"
+                onClick={() => {
+                  setSubscriptionOpen(false);
+                  setSelected(null);
+                }}
+              >
+                Cancel
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={() => {
+                  setSubscriptionOpen(false);
+                  navigate("/subscription");
+                }}
+                aria-label="Go to subscription page"
+              >
+                Subscribe Now
               </PrimaryButton>
             </ModalActions>
           </ModalCard>

@@ -3,6 +3,7 @@ import styled from "styled-components";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Houses from "./pages/Houses";
+import Subscription from "./pages/Subscription";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -44,6 +45,10 @@ function App() {
           <Route
             path="/houses"
             element={user ? <Houses /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/subscription"
+            element={user ? <Subscription /> : <Navigate to="/" replace />}
           />
           <Route
             path="/dashboard"
