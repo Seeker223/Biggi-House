@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
-import { houses } from "../data/houses";
 import { getAuthToken } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import {
@@ -156,7 +155,7 @@ export default function Houses() {
   const userId = user?.id || user?._id || user?.userId;
   const [range, setRange] = useState("all");
   const [sort, setSort] = useState("amount-asc");
-  const [list, setList] = useState(houses);
+  const [list, setList] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
@@ -234,6 +233,13 @@ export default function Houses() {
       });
   };
 
+  // Sync vendor form phone number when user data changes
+  useEffect(() => {
+    if (user?.phoneNumber && vendorForm.phoneNumber !== user.phoneNumber) {
+      setVendorForm((prev) => ({ ...prev, phoneNumber: user.phoneNumber }));
+    }
+  }, [user?.phoneNumber]);
+
   const handleJoin = (house) => {
     if (!user) {
       navigate("/login");
@@ -305,29 +311,32 @@ export default function Houses() {
           </Sub>
           <Controls>
             <Filters>
-              <Chip $active={range === "all"} onClick={() => setRange("all")}>
+              <Chip $active={range === "all"} onClick={() => { setRange("all"); setError(""); }} aria-label="Show all houses">
                 All houses
               </Chip>
               <Chip
                 $active={range === "100-300"}
-                onClick={() => setRange("100-300")}
+                onClick={() => { setRange("100-300"); setError(""); }}
+                aria-label="Filter houses 100 to 300 naira"
               >
                 {"\u20A6"}100 - {"\u20A6"}300
               </Chip>
               <Chip
                 $active={range === "400-700"}
-                onClick={() => setRange("400-700")}
+                onClick={() => { setRange("400-700"); setError(""); }}
+                aria-label="Filter houses 400 to 700 naira"
               >
                 {"\u20A6"}400 - {"\u20A6"}700
               </Chip>
               <Chip
                 $active={range === "800-1000"}
-                onClick={() => setRange("800-1000")}
+                onClick={() => { setRange("800-1000"); setError(""); }}
+                aria-label="Filter houses 800 to 1000 naira"
               >
                 {"\u20A6"}800 - {"\u20A6"}1000
               </Chip>
             </Filters>
-            <Select value={sort} onChange={(e) => setSort(e.target.value)}>
+            <Select value={sort} onChange={(e) => { setSort(e.target.value); setError(""); }} aria-label="Sort houses">
               <option value="amount-asc">Sort: Amount (low to high)</option>
               <option value="amount-desc">Sort: Amount (high to low)</option>
               <option value="availability">Sort: Availability</option>
@@ -453,7 +462,9 @@ export default function Houses() {
                   type="button"
                   onClick={() => {
                     setGateOpen(false);
+                    confirmJoin();
                   }}
+                  aria-label="Continue and join the house"
                 >
                   Continue to join
                 </PrimaryButton>
@@ -578,11 +589,12 @@ export default function Houses() {
               </label>
             </div>
             <ModalActions>
-              <GhostButton type="button" onClick={() => setVendorOpen(false)}>
+              <GhostButton type="button" onClick={() => setVendorOpen(false)} aria-label="Close vendor request form">
                 Cancel
               </GhostButton>
               <PrimaryButton
                 type="button"
+                disabled={loading}
                 onClick={() => {
                   setError("");
                   const token = getAuthToken();
@@ -591,6 +603,7 @@ export default function Houses() {
                     setError("Vendor and phone number are required.");
                     return;
                   }
+                  setLoading(true);
                   createBiggiHouseVendorRequest(
                     {
                       vendorUserId: vendorForm.vendorUserId,
@@ -603,10 +616,12 @@ export default function Houses() {
                       setVendorOpen(false);
                       setSuccess("Vendor request sent. The vendor was notified in Biggi Data.");
                     })
-                    .catch((err) => setError(err?.message || "Request failed."));
+                    .catch((err) => setError(err?.message || "Request failed."))
+                    .finally(() => setLoading(false));
                 }}
+              aria-label="Send vendor request"
               >
-                Send request
+                {loading ? "Sending..." : "Send request"}
               </PrimaryButton>
             </ModalActions>
           </ModalCard>
