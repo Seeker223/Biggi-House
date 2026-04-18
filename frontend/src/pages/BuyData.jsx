@@ -191,21 +191,26 @@ export default function BuyData() {
 
   // Auto-select first plan when plans load or network changes
   useEffect(() => {
+    console.log("useEffect triggered - plans:", plans.length, "network:", network, "current planId:", planId);
     if (plans.length === 0) return;
     
     const plansForCurrentNetwork = plans.filter(
-      (p) => p.network?.toLowerCase() === network.toLowerCase()
+      (p) => (p.network || "").toLowerCase().trim() === network.toLowerCase().trim()
     );
+    console.log("Plans for current network:", plansForCurrentNetwork);
     
     if (plansForCurrentNetwork.length > 0) {
       // If current planId is valid for this network, keep it
-      if (plansForCurrentNetwork.some((p) => p.plan_id === planId)) {
+      if (plansForCurrentNetwork.some((p) => (p.plan_id || "").trim() === (planId || "").trim())) {
+        console.log("Current planId is valid, keeping it");
         return;
       }
       // Otherwise, select the first plan for this network
+      console.log("Setting new planId:", plansForCurrentNetwork[0].plan_id);
       setPlanId(plansForCurrentNetwork[0].plan_id);
     } else {
       // No plans for this network, clear selection
+      console.log("No plans for network, clearing planId");
       setPlanId("");
     }
   }, [plans, network]);
@@ -214,13 +219,16 @@ export default function BuyData() {
     try {
       const token = getAuthToken();
       const data = await getDataPlans(token);
+      console.log("Raw plans data:", data);
       const filtered = Array.isArray(data)
         ? data.filter((p) => p.active && p.network && p.amount)
         : [];
+      console.log("Filtered plans:", filtered);
       setPlans(filtered);
       setError(""); // Clear error on successful load
       if (filtered.length > 0) {
         const mtnPlan = filtered.find((p) => p.network?.toLowerCase() === "mtn");
+        console.log("Selected MTN plan:", mtnPlan);
         setPlanId(mtnPlan?.plan_id || filtered[0].plan_id);
       }
     } catch (err) {
@@ -237,10 +245,21 @@ export default function BuyData() {
   };
 
   const networkPlans = plans.filter(
-    (p) => p.network?.toLowerCase() === network.toLowerCase()
+    (p) => (p.network || "").toLowerCase().trim() === network.toLowerCase().trim()
   );
-  const selectedPlan = networkPlans.find((p) => p.plan_id === planId);
+  const selectedPlan = networkPlans.find((p) => (p.plan_id || "").trim() === (planId || "").trim());
   const isValid = phone.length === 11 && planId && selectedPlan;
+
+  // Debug logging
+  console.log("BuyData Debug:", {
+    phone: phone.length,
+    planId: `"${planId}"`,
+    selectedPlan: selectedPlan ? `"${selectedPlan.plan_id}"` : null,
+    networkPlansCount: networkPlans.length,
+    network: `"${network}"`,
+    networkPlansIds: networkPlans.map(p => `"${p.plan_id}"`),
+    isValid
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -307,12 +326,15 @@ export default function BuyData() {
               value={network}
               onChange={(e) => {
                 const newNetwork = e.target.value;
+                console.log("Network changed to:", newNetwork);
                 setNetwork(newNetwork);
                 // Find first plan for the new network from already-filtered plans
                 const plansForNetwork = plans.filter(
                   (p) => p.network?.toLowerCase() === newNetwork.toLowerCase()
                 );
+                console.log("Plans for new network:", plansForNetwork);
                 setPlanId(plansForNetwork.length > 0 ? plansForNetwork[0].plan_id : "");
+                console.log("Set planId to:", plansForNetwork.length > 0 ? plansForNetwork[0].plan_id : "");
               }}
               disabled={loading}
             >
@@ -326,7 +348,11 @@ export default function BuyData() {
             <Label>Data Plan</Label>
             <Select
               value={planId}
-              onChange={(e) => setPlanId(e.target.value)}
+              onChange={(e) => {
+                const newPlanId = (e.target.value || "").trim();
+                console.log("Plan changed to:", `"${newPlanId}"`);
+                setPlanId(newPlanId);
+              }}
               disabled={loading || networkPlans.length === 0}
             >
               <option value="">Select a plan</option>
