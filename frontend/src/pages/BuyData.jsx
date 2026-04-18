@@ -174,7 +174,7 @@ export default function BuyData() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
-  const [phone, setPhone] = useState(user?.phoneNumber || "");
+  const [phone, setPhone] = useState("");
   const [network, setNetwork] = useState("mtn");
   const [planId, setPlanId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -312,7 +312,7 @@ export default function BuyData() {
             <Label>Phone Number</Label>
             <Input
               type="tel"
-              placeholder="08012345678"
+              placeholder="Enter phone number (e.g. 08012345678)"
               value={phone}
               onChange={(e) => setPhone(normalizePhone(e.target.value))}
               maxLength={11}
