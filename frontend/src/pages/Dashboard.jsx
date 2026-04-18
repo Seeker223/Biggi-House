@@ -240,6 +240,7 @@ export default function Dashboard() {
           )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Button onClick={() => navigate("/buy-data")}>Buy Data</Button>
           {memberships.length > 0 && (
             <WarningButton onClick={handleLeaveHouse}>View houses</WarningButton>
           )}
