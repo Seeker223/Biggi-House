@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import { useAuth } from "../utils/AuthContext";
+import { getAuthToken } from "../utils/auth";
 
 const Wrapper = styled(Container)`
   padding: 40px 0;
@@ -170,7 +171,7 @@ const InfoBox = styled.div`
 
 export default function BuyData() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [phone, setPhone] = useState(user?.phoneNumber || "");
   const [network, setNetwork] = useState("mtn");
@@ -210,7 +211,7 @@ export default function BuyData() {
 
   const loadPlans = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       const headers = {
         Authorization: `Bearer ${token}`,
         "X-Client-App": "biggi-house",
@@ -271,7 +272,11 @@ export default function BuyData() {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
+      if (!token) {
+        setError("Authentication token not found. Please sign in again.");
+        return;
+      }
       const res = await fetch(
         `${import.meta.env.VITE_BASE_URL || "http://localhost:5000"}/api/v1/data/buy`,
         {
