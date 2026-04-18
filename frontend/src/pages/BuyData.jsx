@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Container from "../components/Container";
 import { useAuth } from "../utils/AuthContext";
 import { getAuthToken } from "../utils/auth";
+import { getDataPlans, buyData } from "../services/api";
 
 const Wrapper = styled(Container)`
   padding: 40px 0;
@@ -212,27 +213,13 @@ export default function BuyData() {
   const loadPlans = async () => {
     try {
       const token = getAuthToken();
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        "X-Client-App": "biggi-house",
-      };
-      
-      // Get all active plans for Biggi Data
-      const res = await fetch(
-        `${import.meta.env.VITE_BASE_URL || "http://localhost:5000"}/api/v1/plans`,
-        { headers }
-      );
-      
-      if (!res.ok) throw new Error("Failed to load plans");
-      const data = await res.json();
-      
-      const filtered = Array.isArray(data.plans)
-        ? data.plans.filter((p) => p.active && p.network && p.amount)
+      const data = await getDataPlans(token);
+      const filtered = Array.isArray(data)
+        ? data.filter((p) => p.active && p.network && p.amount)
         : [];
       setPlans(filtered);
       setError(""); // Clear error on successful load
       if (filtered.length > 0) {
-        // Set first MTN plan as default
         const mtnPlan = filtered.find((p) => p.network?.toLowerCase() === "mtn");
         setPlanId(mtnPlan?.plan_id || filtered[0].plan_id);
       }
@@ -277,28 +264,7 @@ export default function BuyData() {
         setError("Authentication token not found. Please sign in again.");
         return;
       }
-      const res = await fetch(
-        `${import.meta.env.VITE_BASE_URL || "http://localhost:5000"}/api/v1/data/buy`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "X-Client-App": "biggi-house",
-          },
-          body: JSON.stringify({
-            plan_id: planId,
-            mobile_no: phone,
-          }),
-        }
-      );
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        setError(result.msg || result.error || "Purchase failed");
-        return;
-      }
+      const result = await buyData({ plan_id: planId, mobile_no: phone }, token);
 
       if (result.success) {
         setSuccess(`Data purchase successful! Reference: ${result.reference || "pending"}`);

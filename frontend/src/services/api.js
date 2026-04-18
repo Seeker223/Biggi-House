@@ -481,12 +481,12 @@ export async function getMe(token) {
 }
 
 export async function getDataPlans(token) {
-  const res = await fetch(`${API_BASE}/data/plans`, {
+  const res = await fetch(`${API_BASE}/plans`, {
     headers: { Authorization: `Bearer ${token}`, "X-Client-App": "biggi-house" },
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || data.message || "Failed to fetch plans");
-  return data.plans || [];
+  return Array.isArray(data.plans) ? data.plans : [];
 }
 
 export async function buyData(payload, token) {
