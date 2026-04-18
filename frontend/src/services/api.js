@@ -479,3 +479,27 @@ export async function getMe(token) {
   if (!res.ok) throw new Error("Unauthorized");
   return res.json();
 }
+
+export async function getDataPlans(token) {
+  const res = await fetch(`${API_BASE}/data/plans`, {
+    headers: { Authorization: `Bearer ${token}`, "X-Client-App": "biggi-house" },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to fetch plans");
+  return data.plans || [];
+}
+
+export async function buyData(payload, token) {
+  const res = await fetch(`${API_BASE}/data/buy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "X-Client-App": "biggi-house",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || "Purchase failed");
+  return data;
+}

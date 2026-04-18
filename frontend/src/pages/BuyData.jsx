@@ -1,0 +1,367 @@
+import styled from "styled-components";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Container from "../components/Container";
+import { useAuth } from "../utils/AuthContext";
+
+const Wrapper = styled(Container)`
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+
+  @media (max-width: 640px) {
+    padding: 20px 0;
+    width: min(100%, 92%);
+  }
+`;
+
+const Card = styled.div`
+  width: min(500px, 100%);
+  background: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.radius.lg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 32px;
+  box-shadow: ${({ theme }) => theme.shadows.soft};
+
+  @media (max-width: 640px) {
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 26px;
+  margin-bottom: 8px;
+  font-weight: 700;
+
+  @media (max-width: 640px) {
+    font-size: 22px;
+  }
+`;
+
+const Sub = styled.p`
+  color: ${({ theme }) => theme.colors.muted};
+  margin-bottom: 22px;
+`;
+
+const Field = styled.div`
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+`;
+
+const Label = styled.label`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.muted};
+  font-weight: 600;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fdfdff;
+  font-size: 16px;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.soft};
+  }
+
+  &:disabled {
+    background: #f5f5f7;
+    cursor: not-allowed;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: #fdfdff;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  &:disabled {
+    background: #f5f5f7;
+    cursor: not-allowed;
+  }
+`;
+
+const PriceBox = styled.div`
+  background: ${({ theme }) => theme.colors.soft};
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const PriceLabel = styled.span`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.muted};
+`;
+
+const PriceValue = styled.span`
+  font-size: 18px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.ink};
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  background: ${({ theme }) => theme.gradients.brand};
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const ErrorMsg = styled.p`
+  color: #c02626;
+  font-size: 13px;
+  margin-bottom: 12px;
+  background: #fef2f2;
+  padding: 8px 12px;
+  border-radius: 8px;
+`;
+
+const SuccessMsg = styled.p`
+  color: #059669;
+  font-size: 13px;
+  margin-bottom: 12px;
+  background: #f0fdf4;
+  padding: 8px 12px;
+  border-radius: 8px;
+`;
+
+const InfoBox = styled.div`
+  background: ${({ theme }) => theme.colors.soft};
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.muted};
+  line-height: 1.6;
+`;
+
+export default function BuyData() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [plans, setPlans] = useState([]);
+  const [phone, setPhone] = useState(user?.phoneNumber || "");
+  const [network, setNetwork] = useState("mtn");
+  const [planId, setPlanId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    loadPlans();
+  }, [user, navigate]);
+
+  const loadPlans = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "X-Client-App": "biggi-house",
+      };
+      
+      // Get all active plans for Biggi Data
+      const res = await fetch(
+        `${import.meta.env.VITE_BASE_URL || "http://localhost:5000"}/api/v1/plans`,
+        { headers }
+      );
+      
+      if (!res.ok) throw new Error("Failed to load plans");
+      const data = await res.json();
+      
+      const filtered = Array.isArray(data.plans)
+        ? data.plans.filter((p) => p.active && p.network && p.amount)
+        : [];
+      setPlans(filtered);
+      if (filtered.length > 0) {
+        setPlanId(filtered[0].plan_id);
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load plans");
+    }
+  };
+
+  const normalizePhone = (value) => {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (digits.startsWith("234") && digits.length >= 13) {
+      return `0${digits.slice(digits.length - 10)}`.slice(0, 11);
+    }
+    return digits.slice(0, 11);
+  };
+
+  const selectedPlan = plans.find((p) => p.plan_id === planId);
+  const networkPlans = plans.filter(
+    (p) => p.network?.toLowerCase() === network.toLowerCase()
+  );
+  const isValid = phone.length === 11 && planId && selectedPlan;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!isValid) {
+      setError("Please fill all fields correctly");
+      return;
+    }
+
+    if (!user?.id) {
+      setError("Not authenticated");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${import.meta.env.VITE_BASE_URL || "http://localhost:5000"}/api/v1/data/buy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "X-Client-App": "biggi-house",
+          },
+          body: JSON.stringify({
+            plan_id: planId,
+            mobile_no: phone,
+          }),
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.msg || result.error || "Purchase failed");
+        return;
+      }
+
+      if (result.success) {
+        setSuccess(`Data purchase successful! Reference: ${result.reference || "pending"}`);
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
+      } else {
+        setError(result.msg || result.error || "Purchase failed");
+      }
+    } catch (err) {
+      setError(err.message || "Purchase failed. Please try again.");
+      console.error("Buy data error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Wrapper>
+      <Card>
+        <Title>Buy Data</Title>
+        <Sub>Recharge your data using your Biggi House wallet</Sub>
+
+        <form onSubmit={handleSubmit}>
+          <Field>
+            <Label>Phone Number</Label>
+            <Input
+              type="tel"
+              placeholder="08012345678"
+              value={phone}
+              onChange={(e) => setPhone(normalizePhone(e.target.value))}
+              maxLength={11}
+              disabled={loading}
+            />
+          </Field>
+
+          <Field>
+            <Label>Network</Label>
+            <Select
+              value={network}
+              onChange={(e) => {
+                setNetwork(e.target.value);
+                const planInNetwork = networkPlans.find((p) => p.network?.toLowerCase() === e.target.value.toLowerCase());
+                setPlanId(planInNetwork?.plan_id || "");
+              }}
+              disabled={loading}
+            >
+              <option value="mtn">MTN</option>
+              <option value="airtel">Airtel</option>
+              <option value="glo">Glo</option>
+            </Select>
+          </Field>
+
+          <Field>
+            <Label>Data Plan</Label>
+            <Select
+              value={planId}
+              onChange={(e) => setPlanId(e.target.value)}
+              disabled={loading || networkPlans.length === 0}
+            >
+              <option value="">Select a plan</option>
+              {networkPlans.map((p) => (
+                <option key={p.plan_id} value={p.plan_id}>
+                  {p.name || p.plan_name} - ₦{Number(p.amount || 0).toLocaleString()}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          {selectedPlan && (
+            <PriceBox>
+              <PriceLabel>{selectedPlan.name || selectedPlan.plan_name}</PriceLabel>
+              <PriceValue>₦{Number(selectedPlan.amount || 0).toLocaleString()}</PriceValue>
+            </PriceBox>
+          )}
+
+          {error && <ErrorMsg>{error}</ErrorMsg>}
+          {success && <SuccessMsg>{success}</SuccessMsg>}
+
+          <Button type="submit" disabled={loading || !isValid}>
+            {loading ? "Processing..." : "Buy Data"}
+          </Button>
+        </form>
+
+        <InfoBox style={{ marginTop: "16px" }}>
+          • Ensure phone number is correct
+          <br />
+          • Network must match your SIM card
+          <br />
+          • Data will be delivered instantly
+        </InfoBox>
+      </Card>
+    </Wrapper>
+  );
+}

@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import FAQ from "./pages/FAQ";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import BuyData from "./pages/BuyData";
 import CPanel from "./pages/CPanel";
 import { useAuth } from "./utils/AuthContext";
 
@@ -70,6 +71,10 @@ function App() {
           <Route
             path="/wallet"
             element={user ? <Wallet /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/buy-data"
+            element={user ? <BuyData /> : <Navigate to="/" replace />}
           />
           <Route
             path="/profile"
