@@ -646,6 +646,11 @@ export default function CPanel() {
             </TableWrap>
           </Panel>
         )}
+                </tbody>
+              </Table>
+            </TableWrap>
+          </Panel>
+        )}
 
         <Sub style={{ marginTop: 14 }}>
           {busy ? "Working..." : " "}

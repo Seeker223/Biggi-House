@@ -8,8 +8,10 @@ import {
 } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import {
+  createBiggiHouseVendorRequest,
   getBiggiHouseEligibility,
   getBiggiHouseMemberships,
+  getBiggiHouseVendors,
   getBiggiHouseWallet,
 } from "../services/api";
 
@@ -131,10 +133,20 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [wallet, setWallet] = useState(null);
+  const [vendors, setVendors] = useState([]);
   const [eligibility, setEligibility] = useState(null);
   const [memberships, setMemberships] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [requestVendorOpen, setRequestVendorOpen] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    vendorUserId: "",
+    phoneNumber: user?.phoneNumber || "",
+    network: "",
+    planId: "",
+    note: "",
+  });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const token = useMemo(() => getAuthToken(), []);
 
@@ -144,6 +156,7 @@ export default function Dashboard() {
     setError("");
     Promise.all([
       getBiggiHouseWallet(token).then((data) => setWallet(data)),
+      getBiggiHouseVendors(token).then((data) => setVendors(data || [])),
       getBiggiHouseEligibility(token).then((data) => setEligibility(data)),
       getBiggiHouseMemberships(token).then((data) => setMemberships(data || [])),
     ])
@@ -222,6 +235,9 @@ export default function Dashboard() {
             <p style={{ color: "#5b6475", marginTop: "10px" }}>Refreshing...</p>
           )}
           {error && <p style={{ color: "#c02626", marginTop: "10px" }}>{error}</p>}
+          {success && (
+            <p style={{ color: "#15803d", marginTop: "10px" }}>{success}</p>
+          )}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <Button onClick={() => navigate("/buy-data")}>Buy Data</Button>
@@ -354,14 +370,169 @@ export default function Dashboard() {
             </ProgressWrap>
             {!eligibility?.eligible && (
               <>
-                <SecondaryButton onClick={() => navigate("/buy-data")}>
-                  Buy Data
+                <SecondaryButton onClick={() => setRequestVendorOpen(true)}>
+                  Request a vendor purchase
                 </SecondaryButton>
+                <p style={{ color: "#5b6475", fontSize: "14px" }}>
+                  Vendors are Biggi Data merchant users who can help you buy data.
+                </p>
               </>
             )}
           </div>
         </Card>
+        <Card>
+          <CardLabel>Vendors (Biggi Data merchants)</CardLabel>
+          {vendors.length ? (
+            <div style={{ marginTop: "12px", display: "grid", gap: "10px" }}>
+              {vendors.slice(0, 6).map((vendor) => (
+                <div
+                  key={vendor.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    padding: "12px 14px",
+                    borderRadius: "14px",
+                    border: "1px solid rgba(15, 23, 42, 0.08)",
+                    background: "#fff",
+                  }}
+                >
+                  <div style={{ display: "grid", gap: "2px" }}>
+                    <strong style={{ fontSize: "14px" }}>{vendor.username}</strong>
+                    <span style={{ color: "#5b6475", fontSize: "13px" }}>
+                      {vendor.phoneNumber}
+                    </span>
+                  </div>
+                  <SecondaryButton
+                    onClick={() => {
+                      setRequestForm((prev) => ({
+                        ...prev,
+                        vendorUserId: vendor.id,
+                      }));
+                      setRequestVendorOpen(true);
+                    }}
+                  >
+                    Request
+                  </SecondaryButton>
+                </div>
+              ))}
+              {vendors.length > 6 && (
+                <p style={{ color: "#5b6475", fontSize: "13px" }}>
+                  Showing 6 of {vendors.length} vendors.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p style={{ color: "#5b6475", marginTop: "10px" }}>
+              No vendors available yet.
+            </p>
+          )}
+        </Card>
       </Grid>
+
+      {requestVendorOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(8, 12, 24, 0.35)",
+            display: "grid",
+            placeItems: "center",
+            padding: "20px",
+            zIndex: 60,
+          }}
+        >
+          <div
+            style={{
+              width: "min(560px, 100%)",
+              background: "#fff",
+              borderRadius: "18px",
+              padding: "18px",
+              border: "1px solid rgba(15, 23, 42, 0.08)",
+              boxShadow: "0 10px 40px rgba(15, 23, 42, 0.14)",
+              display: "grid",
+              gap: "12px",
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Request data purchase</h3>
+            <p style={{ color: "#5b6475", margin: 0 }}>
+              Choose a vendor. They will receive a notification in Biggi Data.
+            </p>
+            <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+              Vendor
+              <select
+                value={requestForm.vendorUserId}
+                onChange={(e) =>
+                  setRequestForm((prev) => ({ ...prev, vendorUserId: e.target.value }))
+                }
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(15, 23, 42, 0.14)",
+                }}
+              >
+                <option value="">Select vendor</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.username} ({vendor.phoneNumber})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+              Phone number
+              <input
+                value={requestForm.phoneNumber}
+                onChange={(e) =>
+                  setRequestForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                }
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(15, 23, 42, 0.14)",
+                }}
+              />
+            </label>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <GhostButton onClick={() => setRequestVendorOpen(false)}>
+                Cancel
+              </GhostButton>
+              <Button
+                onClick={() => {
+                  setError("");
+                  setSuccess("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  if (!requestForm.vendorUserId || !requestForm.phoneNumber) {
+                    setError("Vendor and phone number are required.");
+                    return;
+                  }
+                  createBiggiHouseVendorRequest(
+                    {
+                      vendorUserId: requestForm.vendorUserId,
+                      phoneNumber: requestForm.phoneNumber,
+                      network: requestForm.network || undefined,
+                      planId: requestForm.planId || undefined,
+                      note: requestForm.note || undefined,
+                    },
+                    token
+                  )
+                    .then(() => {
+                      setRequestVendorOpen(false);
+                      setSuccess("Vendor request sent. The vendor was notified in Biggi Data.");
+                      reload();
+                    })
+                    .catch((err) => setError(err?.message || "Request failed."));
+                }}
+              >
+                Send request
+              </Button>
+            </div>
+            {error && <p style={{ color: "#c02626", margin: 0 }}>{error}</p>}
+          </div>
+        </div>
+      )}
     </Wrapper>
   );
 }

@@ -11,8 +11,10 @@ import {
   getBiggiHouseAdminMemberships,
   getBiggiHouseAdminOverview,
   getBiggiHouseAdminUsers,
+  getBiggiHouseAdminVendorRequests,
   updateBiggiHouseAdminHouse,
   updateBiggiHouseAdminUser,
+  updateBiggiHouseAdminVendorRequest,
 } from "../services/api";
 
 const Page = styled.div`
@@ -232,6 +234,8 @@ export default function CPanel() {
   const [newHouse, setNewHouse] = useState({ number: "", minimum: "" });
   const [memberships, setMemberships] = useState([]);
   const [membershipHouseId, setMembershipHouseId] = useState("");
+  const [requests, setRequests] = useState([]);
+  const [requestStatus, setRequestStatus] = useState("");
 
   const load = async (fn) => {
     setBusy(true);
@@ -274,6 +278,12 @@ export default function CPanel() {
       });
       return;
     }
+    if (tab === "requests") {
+      load(async () => {
+        const data = await getBiggiHouseAdminVendorRequests(token, { status: requestStatus || undefined });
+        setRequests(data.requests || []);
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -314,6 +324,9 @@ export default function CPanel() {
           <Tab $active={tab === "memberships"} onClick={() => setTab("memberships")} type="button">
             Memberships
           </Tab>
+          <Tab $active={tab === "requests"} onClick={() => setTab("requests")} type="button">
+            Vendor Requests
+          </Tab>
         </Tabs>
 
         {error && (
@@ -353,6 +366,10 @@ export default function CPanel() {
               <Stat>
                 <StatLabel>Memberships</StatLabel>
                 <StatValue>{overview?.houses?.memberships ?? "—"}</StatValue>
+              </Stat>
+              <Stat>
+                <StatLabel>Pending Requests</StatLabel>
+                <StatValue>{overview?.vendorRequests?.pending ?? "—"}</StatValue>
               </Stat>
             </Cards>
             <Panel>
@@ -647,6 +664,84 @@ export default function CPanel() {
           </Panel>
         )}
 
+        {tab === "requests" && (
+          <Panel>
+            <PanelHeader>
+              <span>Vendor Requests</span>
+              <Tools>
+                <Select value={requestStatus} onChange={(e) => setRequestStatus(e.target.value)}>
+                  <option value="">All</option>
+                  <option value="pending">pending</option>
+                  <option value="accepted">accepted</option>
+                  <option value="rejected">rejected</option>
+                  <option value="completed">completed</option>
+                  <option value="cancelled">cancelled</option>
+                </Select>
+                <Primary
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    load(async () => {
+                      const data = await getBiggiHouseAdminVendorRequests(token, { status: requestStatus || undefined });
+                      setRequests(data.requests || []);
+                    })
+                  }
+                >
+                  Apply
+                </Primary>
+              </Tools>
+            </PanelHeader>
+
+            <TableWrap>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>Phone</th>
+                    <th>Requester</th>
+                    <th>Vendor</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((r) => (
+                    <tr key={r.id}>
+                      <td style={{ fontWeight: 900 }}>{r.phoneNumber}</td>
+                      <td>{r.requester?.username || "—"}</td>
+                      <td>{r.vendor?.username || "—"}</td>
+                      <td>{r.status}</td>
+                      <td style={{ color: "#5b6475" }}>{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}</td>
+                      <td>
+                        <Ghost
+                          type="button"
+                          onClick={() => {
+                            const status = window.prompt("Set status:", r.status);
+                            if (status === null) return;
+                            load(async () => {
+                              const next = await updateBiggiHouseAdminVendorRequest(r.id, { status }, token);
+                              setRequests((prev) => prev.map((x) => (x.id === r.id ? { ...x, ...next } : x)));
+                            });
+                          }}
+                        >
+                          Update Status
+                        </Ghost>
+                      </td>
+                    </tr>
+                  ))}
+                  {requests.length === 0 && (
+                    <tr>
+                      <td colSpan="6" style={{ color: "#5b6475" }}>
+                        No requests.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </TableWrap>
+          </Panel>
+        )}
+
         <Sub style={{ marginTop: 14 }}>
           {busy ? "Working..." : " "}
         </Sub>
@@ -654,3 +749,4 @@ export default function CPanel() {
     </Page>
   );
 }
+

@@ -6,9 +6,11 @@ import HouseCard from "../components/HouseCard";
 import { getAuthToken } from "../utils/auth";
 import { useAuth } from "../utils/AuthContext";
 import {
+  createBiggiHouseVendorRequest,
   getBiggiHouseEligibility,
   getBiggiHouseHouses,
   getBiggiHouseMemberships,
+  getBiggiHouseVendors,
   getBiggiHouseWallet,
   joinBiggiHouseHouse,
   getSubscriptionStatus,
@@ -163,9 +165,16 @@ export default function Houses() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [memberships, setMemberships] = useState([]);
   const [eligibility, setEligibility] = useState(null);
+  const [vendors, setVendors] = useState([]);
   const [gateOpen, setGateOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [vendorForm, setVendorForm] = useState({
+    vendorUserId: "",
+    phoneNumber: user?.phoneNumber || "",
+    note: "",
+  });
 
   const filtered = useMemo(() => {
     let result = [...list];
@@ -200,6 +209,7 @@ export default function Houses() {
       }),
       getBiggiHouseMemberships(token).then((items) => setMemberships(items || [])),
       getBiggiHouseEligibility(token).then((data) => setEligibility(data)),
+      getBiggiHouseVendors(token).then((items) => setVendors(items || [])),
       getSubscriptionStatus(token).then((data) => setSubscriptionStatus(data)),
     ])
       .catch((err) => {
@@ -226,6 +236,13 @@ export default function Houses() {
         // Keep last known state.
       });
   };
+
+  // Sync vendor form phone number when user data changes
+  useEffect(() => {
+    if (user?.phoneNumber && vendorForm.phoneNumber !== user.phoneNumber) {
+      setVendorForm((prev) => ({ ...prev, phoneNumber: user.phoneNumber }));
+    }
+  }, [user?.phoneNumber]);
 
   const handleJoin = (house) => {
     if (!user) {
@@ -377,8 +394,8 @@ export default function Houses() {
                 <GhostButton type="button" onClick={refreshEligibility}>
                   Refresh status
                 </GhostButton>
-                <PrimaryButton type="button" onClick={() => navigate("/buy-data")}>
-                  Buy Data
+                <PrimaryButton type="button" onClick={() => setVendorOpen(true)}>
+                  Request vendor purchase
                 </PrimaryButton>
               </div>
             )}
@@ -446,8 +463,8 @@ export default function Houses() {
                 Refresh
               </GhostButton>
               {!eligibility?.eligible && (
-                <PrimaryButton type="button" onClick={() => navigate("/buy-data")}>
-                  Buy Data
+                <PrimaryButton type="button" onClick={() => setVendorOpen(true)}>
+                  Request vendor purchase
                 </PrimaryButton>
               )}
               {selected &&
@@ -516,6 +533,107 @@ export default function Houses() {
               </GhostButton>
               <PrimaryButton onClick={confirmJoin} disabled={loading}>
                 {loading ? "Processing..." : "Pay and join house"}
+              </PrimaryButton>
+            </ModalActions>
+          </ModalCard>
+        </ModalBackdrop>
+      )}
+
+      {vendorOpen && (
+        <ModalBackdrop>
+          <ModalCard>
+            <h2>Request vendor purchase</h2>
+            <p style={{ color: "#5b6475" }}>
+              Choose a Biggi Data merchant. They will be notified that you want to buy
+              data for this number.
+            </p>
+            <div style={{ display: "grid", gap: "10px" }}>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Vendor
+                <select
+                  value={vendorForm.vendorUserId}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, vendorUserId: e.target.value }))
+                  }
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                    background: "#fff",
+                  }}
+                >
+                  <option value="">Select vendor</option>
+                  {vendors.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>
+                      {vendor.username} ({vendor.phoneNumber})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Phone number
+                <input
+                  value={vendorForm.phoneNumber}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                  }
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                  }}
+                />
+              </label>
+              <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
+                Note (optional)
+                <input
+                  value={vendorForm.note}
+                  onChange={(e) =>
+                    setVendorForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  placeholder="e.g. 1GB for MTN"
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(15, 23, 42, 0.14)",
+                  }}
+                />
+              </label>
+            </div>
+            <ModalActions>
+              <GhostButton type="button" onClick={() => setVendorOpen(false)} aria-label="Close vendor request form">
+                Cancel
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  if (!vendorForm.vendorUserId || !vendorForm.phoneNumber) {
+                    setError("Vendor and phone number are required.");
+                    return;
+                  }
+                  setLoading(true);
+                  createBiggiHouseVendorRequest(
+                    {
+                      vendorUserId: vendorForm.vendorUserId,
+                      phoneNumber: vendorForm.phoneNumber,
+                      note: vendorForm.note || undefined,
+                    },
+                    token
+                  )
+                    .then(() => {
+                      setVendorOpen(false);
+                      setSuccess("Vendor request sent. The vendor was notified in Biggi Data.");
+                    })
+                    .catch((err) => setError(err?.message || "Request failed."))
+                    .finally(() => setLoading(false));
+                }}
+              aria-label="Send vendor request"
+              >
+                {loading ? "Sending..." : "Send request"}
               </PrimaryButton>
             </ModalActions>
           </ModalCard>

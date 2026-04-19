@@ -97,12 +97,16 @@ export default function FAQ() {
       a: "No. BiggiHouse has its own wallet and transaction history. Biggi Data has a separate wallet for data purchases and other services.",
     },
     {
+      q: "How do vendor purchases work?",
+      a: "Biggi Data merchant users act as vendors. If you need help buying data to meet eligibility, you can request a vendor from your dashboard (or houses page). The vendor gets a notification in Biggi Data and can assist you.",
+    },
+    {
       q: "Can I use the same account on Biggi Data and BiggiHouse?",
       a: "Accounts are managed by a shared backend, but access is controlled per app. By default, BiggiHouse users are private users and may not be allowed to sign in on Biggi Data unless their account is enabled for it.",
     },
     {
       q: "Is BiggiHouse powered by Biggi Data?",
-      a: "Yes. BiggiHouse uses Biggi Data bundle services for eligibility checks based on your weekly purchases tied to your phone number.",
+      a: "Yes. BiggiHouse uses Biggi Data bundles services for eligibility checks and merchant vendor workflows.",
     },
   ];
 
@@ -112,7 +116,7 @@ export default function FAQ() {
         <Title>Frequently Asked Questions</Title>
         <Sub>
           Everything you need to know about BiggiHouse houses, eligibility,
-          weekly payouts, and data purchase eligibility powered by Biggi Data.
+          weekly payouts, and vendor purchases powered by Biggi Data.
         </Sub>
       </Header>
       <Grid>
