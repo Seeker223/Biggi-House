@@ -9,8 +9,11 @@ import {
   deleteBiggiHouseAdminMembership,
   getBiggiHouseAdminHouses,
   getBiggiHouseAdminMemberships,
+  getBiggiHouseAdminWinners,
   getBiggiHouseAdminOverview,
   getBiggiHouseAdminUsers,
+  triggerBiggiHouseWinnerPayouts,
+  triggerBiggiHouseWinnerSelection,
   updateBiggiHouseAdminHouse,
   updateBiggiHouseAdminUser,
 } from "../services/api";
@@ -232,6 +235,10 @@ export default function CPanel() {
   const [newHouse, setNewHouse] = useState({ number: "", minimum: "" });
   const [memberships, setMemberships] = useState([]);
   const [membershipHouseId, setMembershipHouseId] = useState("");
+  const [winners, setWinners] = useState([]);
+  const [winnerFilters, setWinnerFilters] = useState({ houseId: "", status: "" });
+  const [winnerPage, setWinnerPage] = useState(1);
+  const [winnerTotalPages, setWinnerTotalPages] = useState(1);
 
   const load = async (fn) => {
     setBusy(true);
@@ -277,6 +284,26 @@ export default function CPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  useEffect(() => {
+    if (!isAdmin || !token || tab !== "winners") return;
+
+    load(async () => {
+      if (houses.length === 0) {
+        setHouses(await getBiggiHouseAdminHouses(token));
+      }
+
+      const data = await getBiggiHouseAdminWinners(token, {
+        houseId: winnerFilters.houseId || undefined,
+        status: winnerFilters.status || undefined,
+        page: winnerPage,
+        limit: 50,
+      });
+
+      setWinners(data.winners || []);
+      setWinnerTotalPages(data.pagination?.pages || 1);
+    });
+  }, [tab, winnerFilters, winnerPage, houses.length, isAdmin, token]);
+
   if (!isAdmin) {
     return (
       <Page>
@@ -313,6 +340,9 @@ export default function CPanel() {
           </Tab>
           <Tab $active={tab === "memberships"} onClick={() => setTab("memberships")} type="button">
             Memberships
+          </Tab>
+          <Tab $active={tab === "winners"} onClick={() => setTab("winners")} type="button">
+            Winners
           </Tab>
         </Tabs>
 
@@ -644,6 +674,162 @@ export default function CPanel() {
                 </tbody>
               </Table>
             </TableWrap>
+          </Panel>
+        )}
+
+        {tab === "winners" && (
+          <Panel>
+            <PanelHeader>
+              <span>Winners</span>
+              <Tools>
+                <Select value={winnerFilters.houseId} onChange={(e) => setWinnerFilters((prev) => ({ ...prev, houseId: e.target.value }))}>
+                  <option value="">All houses</option>
+                  {houses
+                    .slice()
+                    .sort((a, b) => a.number - b.number)
+                    .map((h) => (
+                      <option key={h.id} value={h.id}>
+                        House {h.number}
+                      </option>
+                    ))}
+                </Select>
+                <Select value={winnerFilters.status} onChange={(e) => setWinnerFilters((prev) => ({ ...prev, status: e.target.value }))}>
+                  <option value="">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                </Select>
+                <Primary
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setWinnerPage(1)}
+                >
+                  Apply
+                </Primary>
+                <Ghost
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    load(async () => {
+                      const data = await getBiggiHouseAdminWinners(token, {
+                        houseId: winnerFilters.houseId || undefined,
+                        status: winnerFilters.status || undefined,
+                        page: winnerPage,
+                        limit: 50,
+                      });
+                      setWinners(data.winners || []);
+                      setWinnerTotalPages(data.pagination?.pages || 1);
+                    })
+                  }
+                >
+                  Refresh
+                </Ghost>
+              </Tools>
+            </PanelHeader>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+              <Primary
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  load(async () => {
+                    await triggerBiggiHouseWinnerSelection(token);
+                    const data = await getBiggiHouseAdminWinners(token, {
+                      houseId: winnerFilters.houseId || undefined,
+                      status: winnerFilters.status || undefined,
+                      page: winnerPage,
+                      limit: 50,
+                    });
+                    setWinners(data.winners || []);
+                    setWinnerTotalPages(data.pagination?.pages || 1);
+                  })
+                }
+              >
+                Select Winners
+              </Primary>
+              <Danger
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  load(async () => {
+                    await triggerBiggiHouseWinnerPayouts(token);
+                    const data = await getBiggiHouseAdminWinners(token, {
+                      houseId: winnerFilters.houseId || undefined,
+                      status: winnerFilters.status || undefined,
+                      page: winnerPage,
+                      limit: 50,
+                    });
+                    setWinners(data.winners || []);
+                    setWinnerTotalPages(data.pagination?.pages || 1);
+                  })
+                }
+              >
+                Process Payouts
+              </Danger>
+            </div>
+
+            <TableWrap>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>House</th>
+                    <th>Winner</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Week</th>
+                    <th>Paid At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {winners.map((winner) => (
+                    <tr key={winner.id}>
+                      <td>{winner.house ? `House ${winner.house.number}` : "—"}</td>
+                      <td>{winner.user?.username || winner.user?.email || "—"}</td>
+                      <td>{winner.user?.phoneNumber || "—"}</td>
+                      <td>{winner.status || "—"}</td>
+                      <td>{formatMoney(winner.amount || 0)}</td>
+                      <td>
+                        {winner.weekStart && winner.weekEnd
+                          ? `${new Date(winner.weekStart).toLocaleDateString()} - ${new Date(winner.weekEnd).toLocaleDateString()}`
+                          : "—"}
+                      </td>
+                      <td>{winner.paidAt ? new Date(winner.paidAt).toLocaleString() : "—"}</td>
+                    </tr>
+                  ))}
+                  {winners.length === 0 && (
+                    <tr>
+                      <td colSpan="7" style={{ color: "#5b6475" }}>
+                        No winners found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </TableWrap>
+
+            {winnerTotalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}>
+                <span>
+                  Page {winnerPage} of {winnerTotalPages}
+                </span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Ghost
+                    type="button"
+                    disabled={busy || winnerPage <= 1}
+                    onClick={() => setWinnerPage((page) => Math.max(1, page - 1))}
+                  >
+                    Prev
+                  </Ghost>
+                  <Ghost
+                    type="button"
+                    disabled={busy || winnerPage >= winnerTotalPages}
+                    onClick={() => setWinnerPage((page) => Math.min(winnerTotalPages, page + 1))}
+                  >
+                    Next
+                  </Ghost>
+                </div>
+              </div>
+            )}
           </Panel>
         )}
 

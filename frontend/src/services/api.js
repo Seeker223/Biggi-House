@@ -256,6 +256,47 @@ export async function getBiggiHouseAdminMemberships(token, params = {}) {
   return data;
 }
 
+export async function getBiggiHouseAdminWinners(token, params = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const q = new URLSearchParams();
+  if (params.houseId) q.set("houseId", params.houseId);
+  if (params.status) q.set("status", params.status);
+  if (params.page) q.set("page", String(params.page));
+  if (params.limit) q.set("limit", String(params.limit));
+  const res = await fetch(
+    `${API_BASE}/biggihouse/admin/winners${q.toString() ? `?${q}` : ""}`,
+    { headers }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load winners");
+  return data;
+}
+
+export async function triggerBiggiHouseWinnerSelection(token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/winners/select`, {
+    method: "POST",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to select winners");
+  return data;
+}
+
+export async function triggerBiggiHouseWinnerPayouts(token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/winners/payout`, {
+    method: "POST",
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to process payouts");
+  return data;
+}
+
 export async function deleteBiggiHouseAdminMembership(membershipId, token) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
