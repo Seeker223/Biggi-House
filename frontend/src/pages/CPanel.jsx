@@ -4,6 +4,7 @@ import Container from "../components/Container";
 import { useAuth } from "../utils/AuthContext";
 import { getAuthToken } from "../utils/auth";
 import {
+  adjustBiggiHouseAdminUserWallet,
   createBiggiHouseAdminHouse,
   deleteBiggiHouseAdminHouse,
   deleteBiggiHouseAdminMembership,
@@ -12,8 +13,10 @@ import {
   getBiggiHouseAdminWinners,
   getBiggiHouseAdminOverview,
   getBiggiHouseAdminUsers,
+  getBiggiHousePublicConfig,
   triggerBiggiHouseWinnerPayouts,
   triggerBiggiHouseWinnerSelection,
+  updateBiggiHouseAdminConfig,
   updateBiggiHouseAdminHouse,
   updateBiggiHouseAdminUser,
 } from "../services/api";
@@ -229,6 +232,7 @@ export default function CPanel() {
   const [error, setError] = useState("");
 
   const [overview, setOverview] = useState(null);
+  const [config, setConfig] = useState(null);
   const [users, setUsers] = useState([]);
   const [userQuery, setUserQuery] = useState("");
   const [houses, setHouses] = useState([]);
@@ -264,6 +268,10 @@ export default function CPanel() {
     if (!isAdmin || !token) return;
     if (tab === "overview") {
       load(async () => setOverview(await getBiggiHouseAdminOverview(token)));
+      return;
+    }
+    if (tab === "config") {
+      load(async () => setConfig(await getBiggiHousePublicConfig()));
       return;
     }
     if (tab === "users") {
@@ -332,6 +340,9 @@ export default function CPanel() {
           <Tab $active={tab === "overview"} onClick={() => setTab("overview")} type="button">
             Overview
           </Tab>
+          <Tab $active={tab === "config"} onClick={() => setTab("config")} type="button">
+            Config
+          </Tab>
           <Tab $active={tab === "users"} onClick={() => setTab("users")} type="button">
             Users
           </Tab>
@@ -393,10 +404,133 @@ export default function CPanel() {
                 </Ghost>
               </PanelHeader>
               <Sub>
-                BiggiHouse wallet is independent. Users need an active subscription and enough wallet balance to join houses.
+                BiggiHouse wallet is independent. Users need an active weekly subscription and enough wallet balance to join houses. Monthly Card Game is controlled from the Config tab.
               </Sub>
             </Panel>
           </Grid>
+        )}
+
+        {tab === "config" && (
+          <Panel>
+            <PanelHeader>
+              <span>Platform Config</span>
+              <Tools>
+                <Ghost
+                  type="button"
+                  disabled={busy}
+                  onClick={() => load(async () => setConfig(await getBiggiHousePublicConfig()))}
+                >
+                  Refresh
+                </Ghost>
+                <Primary
+                  type="button"
+                  disabled={busy || !config}
+                  onClick={() =>
+                    load(async () => {
+                      const next = await updateBiggiHouseAdminConfig(
+                        {
+                          weeklyPayout: config?.weeklyPayout,
+                          features: config?.features,
+                          game: config?.game,
+                        },
+                        token
+                      );
+                      setConfig(next);
+                    })
+                  }
+                >
+                  Save
+                </Primary>
+              </Tools>
+            </PanelHeader>
+
+            <div style={{ marginTop: 12, display: "grid", gap: 14 }}>
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ fontWeight: 900 }}>Monthly Card Game</div>
+                <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(config?.features?.monthlyCardGameEnabled)}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...(p || {}),
+                        features: {
+                          ...(p?.features || {}),
+                          monthlyCardGameEnabled: e.target.checked,
+                        },
+                      }))
+                    }
+                  />
+                  <span>Enable game</span>
+                </label>
+                <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(config?.game?.requireDataPurchase)}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...(p || {}),
+                        game: { ...(p?.game || {}), requireDataPurchase: e.target.checked },
+                      }))
+                    }
+                  />
+                  <span>Require at least 1 data purchase before play</span>
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ fontWeight: 900 }}>Weekly Payout Time</div>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 10,
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  }}
+                >
+                  <Input
+                    value={String(config?.weeklyPayout?.dayOfWeek ?? 0)}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...(p || {}),
+                        weeklyPayout: {
+                          ...(p?.weeklyPayout || {}),
+                          dayOfWeek: Number(e.target.value || 0),
+                        },
+                      }))
+                    }
+                    placeholder="Day (0=Sun)"
+                  />
+                  <Input
+                    value={String(config?.weeklyPayout?.hour ?? 22)}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...(p || {}),
+                        weeklyPayout: {
+                          ...(p?.weeklyPayout || {}),
+                          hour: Number(e.target.value || 0),
+                        },
+                      }))
+                    }
+                    placeholder="Hour (0-23)"
+                  />
+                  <Input
+                    value={String(config?.weeklyPayout?.minute ?? 0)}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...(p || {}),
+                        weeklyPayout: {
+                          ...(p?.weeklyPayout || {}),
+                          minute: Number(e.target.value || 0),
+                        },
+                      }))
+                    }
+                    placeholder="Minute"
+                  />
+                </div>
+                <Sub>Default: Sunday (0) at 22:00.</Sub>
+              </div>
+            </div>
+          </Panel>
         )}
 
         {tab === "users" && (
@@ -421,6 +555,8 @@ export default function CPanel() {
                     <th>Phone</th>
                     <th>Verified</th>
                     <th>User Role</th>
+                    <th>Wallet</th>
+                    <th>Subscription</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -434,6 +570,19 @@ export default function CPanel() {
                       <td>{u.phoneNumber || "—"}</td>
                       <td>{u.isVerified ? "Yes" : "No"}</td>
                       <td>{u.userRole || "private"}</td>
+                      <td style={{ fontWeight: 900 }}>{formatMoney(u.walletBalance ?? 0)}</td>
+                      <td>
+                        {u.subscription?.active ? (
+                          <div style={{ fontWeight: 900, color: "#065f46" }}>Active</div>
+                        ) : (
+                          <div style={{ fontWeight: 900, color: "#991b1b" }}>Inactive</div>
+                        )}
+                        {u.subscription?.renewalDate ? (
+                          <div style={{ color: "#5b6475", fontSize: 12 }}>
+                            Renew: {new Date(u.subscription.renewalDate).toLocaleDateString()}
+                          </div>
+                        ) : null}
+                      </td>
                       <td style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <Ghost
                           type="button"
@@ -445,6 +594,44 @@ export default function CPanel() {
                           }
                         >
                           Toggle Verify
+                        </Ghost>
+                        <Ghost
+                          type="button"
+                          onClick={() => {
+                            const raw = window.prompt("Wallet credit amount (NGN):", "0");
+                            if (raw === null) return;
+                            const amount = Number(raw);
+                            if (!Number.isFinite(amount) || amount <= 0) return;
+                            load(async () => {
+                              const wallet = await adjustBiggiHouseAdminUserWallet(u.id, { amount }, token);
+                              setUsers((prev) =>
+                                prev.map((x) =>
+                                  x.id === u.id ? { ...x, walletBalance: wallet.balance } : x
+                                )
+                              );
+                            });
+                          }}
+                        >
+                          Credit Wallet
+                        </Ghost>
+                        <Ghost
+                          type="button"
+                          onClick={() => {
+                            const raw = window.prompt("Wallet debit amount (NGN):", "0");
+                            if (raw === null) return;
+                            const amount = Number(raw);
+                            if (!Number.isFinite(amount) || amount <= 0) return;
+                            load(async () => {
+                              const wallet = await adjustBiggiHouseAdminUserWallet(u.id, { amount: -amount }, token);
+                              setUsers((prev) =>
+                                prev.map((x) =>
+                                  x.id === u.id ? { ...x, walletBalance: wallet.balance } : x
+                                )
+                              );
+                            });
+                          }}
+                        >
+                          Debit Wallet
                         </Ghost>
                         <Ghost
                           type="button"
@@ -477,7 +664,7 @@ export default function CPanel() {
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="5" style={{ color: "#5b6475" }}>
+                      <td colSpan="7" style={{ color: "#5b6475" }}>
                         No users.
                       </td>
                     </tr>

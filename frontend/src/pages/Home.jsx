@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../utils/AuthContext";
 import Container from "../components/Container";
 import HouseCard from "../components/HouseCard";
@@ -11,6 +12,7 @@ import {
   ShieldIcon,
 } from "../components/Icons";
 import fintechMockup from "../assets/biggiHouse fintech platform interface.png";
+import { getBiggiHousePublicConfig } from "../services/api";
 
 const HeroSection = styled.section`
   padding: 70px 0 40px;
@@ -184,6 +186,19 @@ const GhostButton = styled(Link)`
   border-radius: 999px;
   font-weight: 600;
   text-align: center;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
+`;
+
+const GhostActionButton = styled.button`
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: center;
+  background: #fff;
 
   @media (max-width: 640px) {
     width: 100%;
@@ -443,8 +458,20 @@ const SocialChip = styled.span`
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const preview = houses.slice(0, 3);
+  const [config, setConfig] = useState(null);
+
+  const isGameEnabled = Boolean(config?.features?.monthlyCardGameEnabled);
+
+  useEffect(() => {
+    getBiggiHousePublicConfig()
+      .then((cfg) => setConfig(cfg))
+      .catch(() => setConfig(null));
+  }, []);
+
+  const joinHouseHref = user ? "/houses" : "/login";
+  const onJoinHouse = useMemo(() => () => navigate(joinHouseHref), [navigate, joinHouseHref]);
 
   return (
     <>
@@ -464,8 +491,19 @@ export default function Home() {
               <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
             )}
             <ButtonRow>
-              <PrimaryButton to="/houses">Join a House</PrimaryButton>
-              <GhostButton to="/signup">Create Account</GhostButton>
+              {!user ? (
+                <>
+                  <GhostButton to="/signup">Create Account</GhostButton>
+                  <PrimaryButton to="/login">Join a House</PrimaryButton>
+                </>
+              ) : (
+                <>
+                  <PrimaryButton to="/houses">Join a House</PrimaryButton>
+                  <GhostActionButton type="button" onClick={logout}>
+                    Sign out
+                  </GhostActionButton>
+                </>
+              )}
             </ButtonRow>
           </HeroCopy>
           <HeroCard>
@@ -542,10 +580,34 @@ export default function Home() {
             <HouseCard
               key={house.id}
               house={house}
-              onJoin={() => navigate("/houses")}
+              onJoin={onJoinHouse}
             />
           ))}
         </HousesGrid>
+      </Section>
+
+      <Section>
+        <Container>
+          <Highlight>
+            <div>
+              <HighlightTitle>Monthly Card Game</HighlightTitle>
+              <p style={{ opacity: 0.85 }}>
+                Requires at least 1 data purchase to play Weekly Prediction Game.
+              </p>
+            </div>
+            <HighlightButton
+              as="button"
+              type="button"
+              disabled={!isGameEnabled}
+              onClick={() => navigate("/monthly-card-game")}
+              style={{ opacity: isGameEnabled ? 1 : 0.6 }}
+              aria-disabled={!isGameEnabled}
+              title={isGameEnabled ? "Open game" : "Admin will enable soon"}
+            >
+              {isGameEnabled ? "Play now" : "Disabled"}
+            </HighlightButton>
+          </Highlight>
+        </Container>
       </Section>
 
       <Section>
@@ -557,7 +619,11 @@ export default function Home() {
                 Create an account in minutes and join the right house for you.
               </p>
             </div>
-            <HighlightButton to="/signup">Get started</HighlightButton>
+            {!user ? (
+              <HighlightButton to="/signup">Get started</HighlightButton>
+            ) : (
+              <HighlightButton to="/houses">Open houses</HighlightButton>
+            )}
           </Highlight>
         </Container>
       </Section>

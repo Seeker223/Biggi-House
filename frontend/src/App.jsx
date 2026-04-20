@@ -14,6 +14,7 @@ import FAQ from "./pages/FAQ";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import CPanel from "./pages/CPanel";
+import MonthlyCardGame from "./pages/MonthlyCardGame";
 import { useAuth } from "./utils/AuthContext";
 
 const AppShell = styled.div`
@@ -57,30 +58,34 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route
             path="/houses"
-            element={user ? <Houses /> : <Navigate to="/" replace />}
+            element={user ? <Houses /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/subscription"
-            element={user ? <Subscription /> : <Navigate to="/" replace />}
+            element={user ? <Subscription /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/dashboard"
-            element={user ? <Dashboard /> : <Navigate to="/" replace />}
+            element={user ? <Dashboard /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/wallet"
-            element={user ? <Wallet /> : <Navigate to="/" replace />}
+            element={user ? <Wallet /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/monthly-card-game"
+            element={user ? <MonthlyCardGame /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/profile"
-            element={user ? <Profile /> : <Navigate to="/" replace />}
+            element={user ? <Profile /> : <Navigate to="/login" replace />}
           />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/payment-success"
-            element={user ? <PaymentSuccess /> : <Navigate to="/" replace />}
+            element={user ? <PaymentSuccess /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/c-panel"

@@ -1,4 +1,4 @@
-import styled from "styled-components";
+﻿import styled from "styled-components";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Container from "../components/Container";
 import { getAuthToken, setRefreshToken } from "../utils/auth";
@@ -211,7 +211,6 @@ export default function Profile() {
       .slice(0, 2) || "BH";
 
   const registrationNumber =
-    profileUser?.referralCode ||
     `BH-${String(profileUser?.id || "").slice(-6).toUpperCase()}`;
 
   const formatDate = (value) => {
@@ -236,8 +235,6 @@ export default function Profile() {
 
   const identityDetails = [
     ["NIN", profileUser?.nin || "Not provided"],
-    ["Referral code", profileUser?.referralCode || "Not provided"],
-    ["Referred by", profileUser?.referredByCode || "Not provided"],
     ["User role", profileUser?.userRole || profileUser?.role || "User"],
     ["Verification", profileUser?.isVerified ? "Verified" : "Pending"],
     ["Allowed apps", Array.isArray(profileUser?.allowedApps) ? profileUser.allowedApps.join(", ") : "Not set"],
@@ -362,3 +359,4 @@ export default function Profile() {
     </Wrapper>
   );
 }
+

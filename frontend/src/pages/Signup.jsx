@@ -78,6 +78,12 @@ const Button = styled.button`
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
+const ButtonStack = styled.div`
+  margin-top: 10px;
+  display: grid;
+  gap: 12px;
+`;
+
 export default function Signup() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -239,13 +245,15 @@ export default function Signup() {
           {error && (
             <p style={{ color: "#c02626", fontSize: "13px" }}>{error}</p>
           )}
-          <Button type="submit" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
-          </Button>
+          <ButtonStack>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating account..." : "Create account"}
+            </Button>
+            <Button as={Link} to="/login" type="button">
+              Login
+            </Button>
+          </ButtonStack>
         </form>
-        <Button as={Link} to="/login" type="button" style={{ marginTop: 12 }}>
-          Login
-        </Button>
       </Card>
     </Wrapper>
   );

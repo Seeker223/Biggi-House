@@ -86,7 +86,7 @@ export default function FAQ() {
     },
     {
       q: "How are payouts handled?",
-      a: "Payouts are weekly. Your dashboard shows the next payout time and your latest activity so the flow stays transparent.",
+      a: "Payouts are weekly. Default payout time is Sunday 10:00pm and your dashboard shows the next payout time and latest activity.",
     },
     {
       q: "Can I join more than one house?",
@@ -103,6 +103,10 @@ export default function FAQ() {
     {
       q: "Is BiggiHouse powered by Biggi Data?",
       a: "Yes. BiggiHouse shares the Biggi ecosystem backend services, while keeping its own wallet and house memberships.",
+    },
+    {
+      q: "What is the Monthly Card Game?",
+      a: "It is a fun weekly prediction game entry page. No tickets are required, but you must have at least 1 data purchase before you can submit an entry. Admin controls when the game is enabled.",
     },
   ];
 

@@ -10,6 +10,7 @@ import { useAuth } from "../utils/AuthContext";
 import {
   getBiggiHouseMemberships,
   getBiggiHouseWallet,
+  getBiggiHousePublicConfig,
 } from "../services/api";
 
 const Wrapper = styled(Container)`
@@ -123,6 +124,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [wallet, setWallet] = useState(null);
   const [memberships, setMemberships] = useState([]);
+  const [config, setConfig] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState("");
 
@@ -135,6 +137,7 @@ export default function Dashboard() {
     Promise.all([
       getBiggiHouseWallet(token).then((data) => setWallet(data)),
       getBiggiHouseMemberships(token).then((data) => setMemberships(data || [])),
+      getBiggiHousePublicConfig().then((data) => setConfig(data)).catch(() => null),
     ])
       .catch((err) => setError(err?.message || "Unable to load dashboard data."))
       .finally(() => setLoadingData(false));
@@ -159,17 +162,32 @@ export default function Dashboard() {
   const walletBalance = Number(wallet?.balance || 0);
   const latestHouse = memberships[0]?.house || null;
   const latestJoin = (wallet?.transactions || []).find((item) => item.type === "house_join");
-  const weeklyPayoutTime = `Fridays ${"\u00B7"} 6:00 PM`;
+  const weeklyPayout = config?.weeklyPayout || { dayOfWeek: 0, hour: 22, minute: 0 };
+  const weeklyPayoutTime = (() => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayLabel = days[Number(weeklyPayout.dayOfWeek) % 7] || "Sunday";
+    const hh = String(Number(weeklyPayout.hour || 0)).padStart(2, "0");
+    const mm = String(Number(weeklyPayout.minute || 0)).padStart(2, "0");
+    return `${dayLabel}s ${"\u00B7"} ${hh}:${mm}`;
+  })();
 
   const nextPayout = useMemo(() => {
     const now = new Date();
     const next = new Date(now);
-    const targetDow = 5; // Fri
+    const targetDow = Number(weeklyPayout.dayOfWeek || 0); // 0 = Sun
     const currentDow = next.getDay();
     let addDays = (targetDow - currentDow + 7) % 7;
-    if (addDays === 0 && next.getHours() >= 18) addDays = 7;
+    const targetHour = Number(weeklyPayout.hour || 22);
+    const targetMinute = Number(weeklyPayout.minute || 0);
+    if (
+      addDays === 0 &&
+      (next.getHours() > targetHour ||
+        (next.getHours() === targetHour && next.getMinutes() >= targetMinute))
+    ) {
+      addDays = 7;
+    }
     next.setDate(next.getDate() + addDays);
-    next.setHours(18, 0, 0, 0);
+    next.setHours(targetHour, targetMinute, 0, 0);
     return next.toLocaleString("en-NG", {
       weekday: "short",
       day: "numeric",
@@ -177,7 +195,9 @@ export default function Dashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
-  }, []);
+  }, [weeklyPayout.dayOfWeek, weeklyPayout.hour, weeklyPayout.minute]);
+
+  const gameEnabled = Boolean(config?.features?.monthlyCardGameEnabled);
 
   const handleLogout = () => {
     logout();
@@ -245,6 +265,23 @@ export default function Dashboard() {
       </Grid>
 
       <Grid style={{ marginTop: "24px" }}>
+        <Card>
+          <CardLabel>Monthly Card Game</CardLabel>
+          <CardValue>{gameEnabled ? "Enabled" : "Disabled"}</CardValue>
+          <p style={{ color: "#5b6475", marginTop: "10px" }}>
+            Play entries are saved to your account. No tickets required.
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <Button
+              type="button"
+              disabled={!gameEnabled}
+              onClick={() => navigate("/monthly-card-game")}
+              style={{ opacity: gameEnabled ? 1 : 0.6 }}
+            >
+              Open game
+            </Button>
+          </div>
+        </Card>
         <Card>
           <CardLabel>BiggiHouse wallet</CardLabel>
           <CardValue>

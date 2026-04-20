@@ -37,6 +37,52 @@ export async function getBiggiHouseHouses(token) {
   return data.houses || [];
 }
 
+export async function getBiggiHousePublicConfig() {
+  const res = await fetch(`${API_BASE}/biggihouse/config`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load config");
+  return data.config || data;
+}
+
+export async function updateBiggiHouseAdminConfig(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/config`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to update config");
+  return data.config || data;
+}
+
+export async function playBiggiHouseMonthlyCardGame(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/game/monthly-card/play`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || data.message || "Unable to play game");
+    err.code = data.errorCode;
+    throw err;
+  }
+  return data;
+}
+
+export async function getBiggiHouseMonthlyCardHistory(token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/game/monthly-card/history`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to load history");
+  return data;
+}
+
 export async function joinBiggiHouseHouse(id, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -191,6 +237,19 @@ export async function updateBiggiHouseAdminUser(userId, payload, token) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || data.message || "Failed to update user");
   return data.user;
+}
+
+export async function adjustBiggiHouseAdminUserWallet(userId, payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE}/biggihouse/admin/users/${userId}/wallet-adjust`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || "Failed to update wallet");
+  return data.wallet;
 }
 
 export async function getBiggiHouseAdminHouses(token) {
