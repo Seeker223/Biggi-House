@@ -236,6 +236,7 @@ export default function Profile() {
 
   const identityDetails = [
     ["NIN", profileUser?.nin || "Not provided"],
+    ["BVN", profileUser?.bvn || "Not provided"],
     ["Referral code", profileUser?.referralCode || "Not provided"],
     ["Referred by", profileUser?.referredByCode || "Not provided"],
     ["User role", profileUser?.userRole || profileUser?.role || "User"],

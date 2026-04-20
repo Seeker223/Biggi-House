@@ -274,15 +274,15 @@ export default function Subscription() {
       <Container>
         <PageHeader>
           <Title>Biggi House Subscription</Title>
-          <Sub>Join the Biggi House community with a weekly subscription</Sub>
+          <Sub>Join the Biggi House community with a monthly subscription</Sub>
         </PageHeader>
 
         <SubscriptionCard>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <PriceSection>
-                <PriceTag>₦50</PriceTag>
-                <PriceLabel>per week</PriceLabel>
+                <PriceTag>₦100</PriceTag>
+                <PriceLabel>per month</PriceLabel>
               </PriceSection>
             </div>
             <StatusBadge $active={isActive}>
@@ -331,7 +331,7 @@ export default function Subscription() {
             </FeatureItem>
             <FeatureItem>
               <FeatureCheck>✓</FeatureCheck>
-              <span>Weekly savings opportunities</span>
+              <span>Monthly savings opportunities</span>
             </FeatureItem>
             <FeatureItem>
               <FeatureCheck>✓</FeatureCheck>

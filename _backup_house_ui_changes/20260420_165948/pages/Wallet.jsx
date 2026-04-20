@@ -10,6 +10,7 @@ import {
   getBiggiHouseVirtualAccount,
   getBiggiHouseWallet,
   verifyBiggiHouseFlutterwavePayment,
+  withdrawBiggiHouseWallet,
 } from "../services/api";
 
 const Wrapper = styled.div`
@@ -243,6 +244,21 @@ export default function Wallet() {
               >
                 Deposit
               </PrimaryButton>
+              <GhostButton
+                onClick={() => {
+                  const input = window.prompt("Enter withdraw amount (NGN):", "1000");
+                  const amount = Number(input || 0);
+                  if (!Number.isFinite(amount) || amount <= 0) return;
+                  setError("");
+                  const token = getAuthToken();
+                  if (!token) return;
+                  withdrawBiggiHouseWallet(amount, token)
+                    .then(() => getBiggiHouseWallet(token).then((data) => setWallet(data)))
+                    .catch((err) => setError(err?.message || "Withdraw failed."));
+                }}
+              >
+                Withdraw
+              </GhostButton>
             </Actions>
 
             <div

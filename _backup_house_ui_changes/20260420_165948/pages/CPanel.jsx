@@ -393,7 +393,8 @@ export default function CPanel() {
                 </Ghost>
               </PanelHeader>
               <Sub>
-                BiggiHouse wallet is independent. Users need an active subscription and enough wallet balance to join houses.
+                BiggiHouse wallet is independent. House-join eligibility depends on weekly Biggi Data purchases tied to
+                the user&apos;s phone number.
               </Sub>
             </Panel>
           </Grid>

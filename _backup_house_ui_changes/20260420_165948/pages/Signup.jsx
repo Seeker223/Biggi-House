@@ -78,6 +78,12 @@ const Button = styled.button`
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;
 
+const FooterText = styled.p`
+  margin-top: 16px;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.muted};
+`;
+
 export default function Signup() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -91,6 +97,8 @@ export default function Signup() {
     birthDate: "",
     state: "",
     nin: "",
+    bvn: "",
+    referralCode: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -125,6 +133,8 @@ export default function Signup() {
       birthDate: form.birthDate,
       state: form.state,
       nin: form.nin,
+      bvn: form.bvn || undefined,
+      referralCode: form.referralCode || undefined,
     })
       .then((data) => {
         if (data.requiresVerification) {
@@ -225,7 +235,25 @@ export default function Signup() {
               onChange={handleChange}
             />
           </Field>
+          <Field>
+            <Label>BVN (optional)</Label>
+            <Input
+              name="bvn"
+              placeholder="11-digit BVN"
+              value={form.bvn}
+              onChange={handleChange}
+            />
+          </Field>
         </Row>
+        <Field>
+          <Label>Referral code (optional)</Label>
+          <Input
+            name="referralCode"
+            placeholder="BIGGI1234"
+            value={form.referralCode}
+            onChange={handleChange}
+          />
+        </Field>
         <Field>
           <Label>Password</Label>
           <Input
@@ -243,9 +271,9 @@ export default function Signup() {
             {loading ? "Creating account..." : "Create account"}
           </Button>
         </form>
-        <Button as={Link} to="/login" type="button" style={{ marginTop: 12 }}>
-          Login
-        </Button>
+        <FooterText>
+          Already have an account? <Link to="/login">Login</Link>
+        </FooterText>
       </Card>
     </Wrapper>
   );
