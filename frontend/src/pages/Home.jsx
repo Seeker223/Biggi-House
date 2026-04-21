@@ -1,4 +1,4 @@
-import styled from "styled-components";
+﻿import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../utils/AuthContext";
@@ -608,7 +608,7 @@ export default function Home() {
             <div>
               <HighlightTitle>Weekly Card Game</HighlightTitle>
               <p style={{ opacity: 0.85 }}>
-                Requires at least 1 data purchase this week to play.
+                Requires at least 1 data purchase this week to play weekly prediction to win #100,000
               </p>
             </div>
             <HighlightButton
@@ -698,3 +698,4 @@ export default function Home() {
     </>
   );
 }
+
