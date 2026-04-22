@@ -1,4 +1,4 @@
-﻿import styled from "styled-components";
+import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../utils/AuthContext";
@@ -521,6 +521,28 @@ export default function Home() {
                 </>
               )}
             </ButtonRow>
+
+            <div style={{ marginTop: 18 }}>
+              <Highlight>
+                <div>
+                  <HighlightTitle>Weekly Card Game</HighlightTitle>
+                  <p style={{ opacity: 0.9 }}>
+                    Requires at least 1 data purchase this week to play weekly prediction to win #100,000
+                  </p>
+                </div>
+                <HighlightButton
+                  as="button"
+                  type="button"
+                  disabled={!isGameEnabled}
+                  onClick={() => navigate("/weekly-card-game")}
+                  style={{ opacity: isGameEnabled ? 1 : 0.6 }}
+                  aria-disabled={!isGameEnabled}
+                  title={isGameEnabled ? "Open game" : "Admin will enable soon"}
+                >
+                  {isGameEnabled ? "Play now" : "Disabled"}
+                </HighlightButton>
+              </Highlight>
+            </div>
           </HeroCopy>
           <HeroCard>
             <Mockup
@@ -604,30 +626,6 @@ export default function Home() {
 
       <Section>
         <Container>
-              <Highlight>
-            <div>
-              <HighlightTitle>Weekly Card Game</HighlightTitle>
-              <p style={{ opacity: 0.85 }}>
-                Requires at least 1 data purchase this week to play weekly prediction to win #100,000
-              </p>
-            </div>
-            <HighlightButton
-              as="button"
-              type="button"
-              disabled={!isGameEnabled}
-              onClick={() => navigate("/weekly-card-game")}
-              style={{ opacity: isGameEnabled ? 1 : 0.6 }}
-              aria-disabled={!isGameEnabled}
-              title={isGameEnabled ? "Open game" : "Admin will enable soon"}
-            >
-              {isGameEnabled ? "Play now" : "Disabled"}
-            </HighlightButton>
-          </Highlight>
-        </Container>
-      </Section>
-
-      <Section>
-        <Container>
           <Highlight>
             <div>
               <HighlightTitle>Start your savings journey today</HighlightTitle>
@@ -698,4 +696,3 @@ export default function Home() {
     </>
   );
 }
-
