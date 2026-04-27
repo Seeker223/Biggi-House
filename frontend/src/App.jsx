@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import styled from "styled-components";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -49,13 +50,38 @@ function App() {
     location.pathname
   );
   const showBanner = user && !hideNav;
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const handlePopState = () => {
+      const ok = window.confirm("Are you sure you want to leave Biggi House?");
+      if (!ok) {
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+
+    // Ensure there is always a history entry to intercept the first Back action.
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
   if (loading) {
     return null;
   }
+
   return (
     <AppShell>
       {!hideNav && <Navbar />}
-      {showBanner && <Banner>WELCOME TO BIGGI HOUSE</Banner>}
+      {showBanner && <Banner>Welcome to Biggi House</Banner>}
       <Main>
         <Routes>
           <Route path="/" element={<Home />} />

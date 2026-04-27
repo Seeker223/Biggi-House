@@ -231,7 +231,7 @@ export default function Dashboard() {
     const dayLabel = days[Number(weeklyPayout.dayOfWeek) % 7] || "Sunday";
     const hh = String(Number(weeklyPayout.hour || 0)).padStart(2, "0");
     const mm = String(Number(weeklyPayout.minute || 0)).padStart(2, "0");
-    return `${dayLabel}s ${"\u00B7"} ${hh}:${mm}`;
+    return `${dayLabel} ${"\u00B7"} ${hh}:${mm}`;
   })();
 
   const nextPayout = useMemo(() => {
@@ -297,6 +297,9 @@ export default function Dashboard() {
           {error && <p style={{ color: "#c02626", marginTop: "10px" }}>{error}</p>}
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Button type="button" onClick={() => navigate("/wallet")}>
+            Fund Wallet
+          </Button>
           {memberships.length > 0 && (
             <WarningButton onClick={handleLeaveHouse}>View houses</WarningButton>
           )}

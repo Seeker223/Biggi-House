@@ -158,7 +158,7 @@ export default function FAQ() {
             Reach out and our support team will respond quickly.
           </p>
         </div>
-        <CtaButton href="mailto:support@biggihouse.com">Contact support</CtaButton>
+        <CtaButton href="mailto:biggidataservice@gmail.com">Contact support</CtaButton>
       </Cta>
     </Wrapper>
   );

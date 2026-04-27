@@ -241,7 +241,7 @@ export default function Wallet() {
                   setTimeout(() => fundInputRef.current?.focus?.(), 200);
                 }}
               >
-                Deposit
+                Fund Wallet
               </PrimaryButton>
             </Actions>
 
@@ -255,11 +255,12 @@ export default function Wallet() {
                 background: "#fff",
               }}
             >
-              <div style={{ fontWeight: 800, marginBottom: "6px" }}>
-                Fund BiggiHouse Wallet (Flutterwave)
-              </div>
+              <div style={{ fontWeight: 800, marginBottom: "6px" }}>Fund Wallet</div>
               <div style={{ color: "#5b6475", fontSize: "14px" }}>
                 Payments here are recorded in your BiggiHouse wallet only (independent from Biggi Data).
+              </div>
+              <div style={{ color: "#5b6475", fontSize: "13px", marginTop: "6px" }}>
+                Weekly payout time is Sunday.
               </div>
               <div style={{ marginTop: "10px", display: "grid", gap: "10px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
@@ -269,18 +270,37 @@ export default function Wallet() {
 
                 <label style={{ display: "grid", gap: "6px", fontSize: "14px" }}>
                   Amount to fund (NGN)
-                  <input
-                    ref={fundInputRef}
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="e.g. 1000"
+                  <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
                       padding: "10px 12px",
-                      borderRadius: "12px",
+                      borderRadius: "14px",
                       border: "1px solid rgba(15, 23, 42, 0.14)",
-                      background: "#fff",
+                      background: "#f8fafc",
                     }}
-                  />
+                  >
+                    <span style={{ fontWeight: 900, color: "#0f172a" }}>₦</span>
+                    <input
+                      ref={fundInputRef}
+                      value={depositAmount}
+                      onChange={(e) => {
+                        const cleaned = String(e.target.value || "").replace(/[^\d]/g, "").slice(0, 9);
+                        setDepositAmount(cleaned);
+                      }}
+                      inputMode="numeric"
+                      placeholder="1000"
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        fontSize: "18px",
+                        fontWeight: 800,
+                      }}
+                    />
+                  </div>
                 </label>
 
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -363,7 +383,7 @@ export default function Wallet() {
                       }
                     }}
                   >
-                    {depositLoading ? "Opening..." : "Pay with Flutterwave"}
+                    {depositLoading ? "Opening..." : "Fund Wallet"}
                   </PrimaryButton>
                   <GhostButton
                     type="button"

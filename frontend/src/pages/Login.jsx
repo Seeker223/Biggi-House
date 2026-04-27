@@ -133,7 +133,7 @@ export default function Login() {
     })
       .then((data) => {
         login(data.user, data.token, data.refreshToken);
-        navigate("/dashboard");
+        navigate("/");
       })
       .catch(async (err) => {
         if (err.requiresVerification) {

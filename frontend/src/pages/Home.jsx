@@ -644,6 +644,24 @@ export default function Home() {
             <div style={{ marginTop: 18 }}>
               <Highlight>
                 <div>
+                  <HighlightTitle>Fund Wallet</HighlightTitle>
+                  <p style={{ opacity: 0.9 }}>
+                    Add money to your BiggiHouse wallet to make fast house contributions.
+                  </p>
+                </div>
+                <HighlightButton
+                  as="button"
+                  type="button"
+                  disabled={false}
+                  onClick={() => navigate(user ? "/wallet" : "/login")}
+                  title={user ? "Fund wallet" : "Login to continue"}
+                >
+                  Fund Wallet
+                </HighlightButton>
+              </Highlight>
+
+              <Highlight>
+                <div>
                   <HighlightTitle>Weekly Card Game</HighlightTitle>
                   <p style={{ opacity: 0.9 }}>
                     Requires at least 1 data purchase this week to win weekly prediction to win free data bundle
