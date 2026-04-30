@@ -344,6 +344,12 @@ const HousesGrid = styled(Container)`
   }
 `;
 
+const HighlightsStack = styled.div`
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+`;
+
 const Highlight = styled.div`
   background: ${({ theme }) => theme.gradients.brand};
   color: #fff;
@@ -614,9 +620,9 @@ export default function Home() {
         <HeroGrid>
           <HeroCopy>
             {user ? (
-              <AnimatedTitle>Join biggi house and enjoy biggi rewards, for recharging biggi data bundles.</AnimatedTitle>
+              <AnimatedTitle>Join Biggi House and enjoy Biggi rewards for recharging Biggi Data bundles.</AnimatedTitle>
             ) : (
-              <Title>Join biggi house and enjoy biggi rewards, for recharging biggi data bundles.</Title>
+              <Title>Join Biggi House and enjoy Biggi rewards for recharging Biggi Data bundles.</Title>
             )}
             <Sub>
               BiggiHouse is a smart group savings platform. Pick a house,
@@ -641,7 +647,7 @@ export default function Home() {
               )}
             </ButtonRow>
 
-            <div style={{ marginTop: 18 }}>
+            <HighlightsStack>
               <Highlight>
                 <div>
                   <HighlightTitle>Fund Wallet</HighlightTitle>
@@ -686,7 +692,7 @@ export default function Home() {
                 </HighlightButton>
               </Highlight>
 
-              <Highlight style={{ marginTop: 12 }}>
+              <Highlight>
                 <div>
                   <HighlightTitle>Buy Data</HighlightTitle>
                   <p style={{ opacity: 0.9 }}>
@@ -703,7 +709,7 @@ export default function Home() {
                   Buy Data
                 </HighlightButton>
               </Highlight>
-            </div>
+            </HighlightsStack>
           </HeroCopy>
           <HeroCard>
             <Mockup
