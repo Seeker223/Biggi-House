@@ -347,7 +347,11 @@ const HousesGrid = styled(Container)`
 const HighlightsStack = styled.div`
   margin-top: 18px;
   display: grid;
-  gap: 12px;
+  gap: 16px;
+
+  @media (max-width: 640px) {
+    gap: 18px;
+  }
 `;
 
 const Highlight = styled.div`
@@ -537,6 +541,40 @@ export default function Home() {
   const needsWeeklyPurchase = Boolean(user && requireWeeklyPurchase && !weeklyPurchaseOk);
   const hasPhoneNumber = Boolean(String(user?.phoneNumber || "").trim());
 
+  const referralCode = useMemo(() => {
+    const codeFromUser = String(user?.referralCode || '').trim();
+    if (codeFromUser) return codeFromUser;
+    const id = user?.id || user?._id || '';
+    const suffix = String(id).slice(-6).toUpperCase();
+    return suffix ? 'BH-' + suffix : '';
+  }, [user]);
+
+  const referralLink = useMemo(() => {
+    if (!referralCode) return '';
+    try {
+      return window.location.origin + '/signup?ref=' + encodeURIComponent(referralCode);
+    } catch {
+      return '/signup?ref=' + encodeURIComponent(referralCode);
+    }
+  }, [referralCode]);
+
+  const copyText = (text) => {
+    if (!text) return;
+    const value = String(text);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).catch(() => {});
+      return;
+    }
+    try {
+      const input = document.createElement('input');
+      input.value = value;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    } catch {}
+  };
+
   useEffect(() => {
     getBiggiHousePublicConfig()
       .then((cfg) => setConfig(cfg))
@@ -629,7 +667,32 @@ export default function Home() {
               contribute weekly, and receive scheduled payouts transparently.
             </Sub>
             {user && (
-              <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
+              <>
+                <PoweredBy>Powered by Biggi Data bundles services</PoweredBy>
+                {referralCode && (
+                  <div style={{ marginBottom: 18, marginTop: -10 }}>
+                    <div style={{ fontWeight: 900, marginBottom: 8, color: '#0f172a' }}>Referral</div>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
+                        <div style={{ padding: '10px 12px', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {referralCode}
+                        </div>
+                        <button type='button' onClick={() => copyText(referralCode)} style={{ border: 'none', borderRadius: 12, padding: '10px 12px', background: '#111827', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>
+                          Copy code
+                        </button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
+                        <div style={{ padding: '10px 12px', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {referralLink}
+                        </div>
+                        <button type='button' onClick={() => copyText(referralLink)} style={{ border: 'none', borderRadius: 12, padding: '10px 12px', background: '#0ea5e9', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>
+                          Copy link
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             <ButtonRow>
               {!user ? (

@@ -98,6 +98,15 @@ const ButtonStack = styled.div`
 
 export default function Signup() {
   const navigate = useNavigate();
+  const location = useLocation(); 
+
+  useEffect(() => { 
+    const params = new URLSearchParams(location.search); 
+    const ref = params.get( ref) || params.get(referral); 
+    if (ref) { 
+      setForm((prev) => ({ ...prev, referralCode: String(ref).trim() })); 
+    } 
+  }, [location.search]); 
   const { login } = useAuth();
   const [form, setForm] = useState({
     firstName: "",
@@ -143,6 +152,7 @@ export default function Signup() {
       birthDate: form.birthDate,
       state: form.state,
       nin: form.nin,
+      referralCode: form.referralCode ? String(form.referralCode).trim() : undefined, 
     })
       .then((data) => {
         if (data.requiresVerification) {
@@ -243,9 +253,18 @@ export default function Signup() {
               onChange={handleChange}
             />
           </Field>
-        </Row>
-        <Field>
-          <Label>Password</Label>
+        </Row> 
+        <Field> 
+          <Label>Referral code (optional)</Label> 
+          <Input 
+            name='referralCode' 
+            placeholder='BH-XXXXXX' 
+            value={form.referralCode} 
+            onChange={handleChange} 
+          /> 
+        </Field> 
+        <Field> 
+          <Label>Password</Label> 
           <Input
             type="password"
             name="password"
