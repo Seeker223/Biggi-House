@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import { useState } from "react";
+import { useEffect, useState } from 'react';
 import Container from "../components/Container";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import biggiLogo from "../assets/biggiHouse2.png";
 import { useAuth } from "../utils/AuthContext";
 import { registerUser } from "../services/api";
@@ -102,9 +102,9 @@ export default function Signup() {
 
   useEffect(() => { 
     const params = new URLSearchParams(location.search); 
-    const ref = params.get( ref) || params.get(referral); 
-    if (ref) { 
-      setForm((prev) => ({ ...prev, referralCode: String(ref).trim() })); 
+    const referralParam = params.get('ref') || params.get('referral'); 
+    if (referralParam) { 
+      setForm((prev) => ({ ...prev, referralCode: String(referralParam).trim() })); 
     } 
   }, [location.search]); 
   const { login } = useAuth();
