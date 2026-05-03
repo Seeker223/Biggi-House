@@ -1,7 +1,21 @@
-const API_BASE =
+﻿const API_BASE =
   (import.meta.env.VITE_BASE_URL
     ? `${import.meta.env.VITE_BASE_URL}/api/v1`
     : null) || "http://localhost:5000/api/v1";
+function extractApiError(data, fallback) {
+  if (!data) return fallback;
+  if (typeof data.error ===  string && data.error.trim()) return data.error;
+  if (typeof data.message === string && data.message.trim()) return data.message;
+  if (typeof data.msg === string && data.msg.trim()) return data.msg;
+  const errors = data.errors;
+  if (Array.isArray(errors) && errors.length) {
+    const first = errors[0];
+    if (typeof first === string && first.trim()) return first;
+    if (first && typeof first.msg === string && first.msg.trim()) return first.msg;
+    if (first && typeof first.message === string && first.message.trim()) return first.message;
+  }
+  return fallback;
+}
 
 export async function getHouses() {
   // Legacy helper retained for older backends; BiggiHouse now uses /biggihouse/houses.
@@ -738,3 +752,5 @@ export async function verifyTransactionPin(pin, token) {
   if (!res.ok) throw new Error(data.error || data.message || "Invalid transaction PIN");
   return data;
 }
+
+
