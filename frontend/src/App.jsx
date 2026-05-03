@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import styled from "styled-components";
 import Navbar from "./components/Navbar";
+import WhatsAppSupport from './components/WhatsAppSupport';
 import Home from "./pages/Home";
 import Houses from "./pages/Houses";
 import Subscription from "./pages/Subscription";
@@ -143,6 +144,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
         </Routes>
       </Main>
+      {showBanner && <WhatsAppSupport />}
     </AppShell>
   );
 }
