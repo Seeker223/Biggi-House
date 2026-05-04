@@ -1,4 +1,4 @@
-import styled from "styled-components";
+﻿import styled from "styled-components";
 import { useEffect, useState } from 'react';
 import Container from "../components/Container";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -118,6 +118,7 @@ export default function Signup() {
     birthDate: "",
     state: "",
     nin: "",
+    referralCode: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -129,29 +130,38 @@ export default function Signup() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
-    if (
-      !form.username ||
-      !form.email ||
-      !form.password ||
-      !form.phoneNumber ||
-      !form.birthDate ||
-      !form.state ||
-      !form.nin
-    ) {
-      setError(
-        "Username, email, password, phone number, state, birth date, and NIN are required."
-      );
-      return;
-    }
+    const username = String(form.username || "").trim();
+    const email = String(form.email || "").trim().toLowerCase();
+    const password = String(form.password || "");
+    const phoneNumber = String(form.phoneNumber || "").trim();
+    const birthDate = String(form.birthDate || "").trim();
+    const state = String(form.state || "").trim();
+    const ninDigits = String(form.nin || "").replace(/\\D/g, "");
+
+    if (!username) return setError("Username is required.");
+    if (!email) return setError("Email is required.");
+
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(email)) return setError("Please enter a valid email address.");
+
+    if (!phoneNumber) return setError("Phone number is required.");
+    if (!birthDate) return setError("Birth date is required.");
+    if (!state) return setError("State is required.");
+
+    if (!ninDigits) return setError("NIN is required.");
+    if (ninDigits.length !== 11) return setError("Please enter a valid 11-digit NIN.");
+
+    if (!password) return setError("Password is required.");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
     setLoading(true);
     registerUser({
-      username: form.username,
-      email: form.email,
-      password: form.password,
-      phoneNumber: form.phoneNumber,
-      birthDate: form.birthDate,
-      state: form.state,
-      nin: form.nin,
+      username,
+      email,
+      password,
+      phoneNumber,
+      birthDate,
+      state,
+      nin: ninDigits,
       referralCode: form.referralCode ? String(form.referralCode).trim() : undefined, 
     })
       .then((data) => {

@@ -1,4 +1,4 @@
-import styled from "styled-components";
+﻿import styled from "styled-components";
 import { useState } from "react";
 import Container from "../components/Container";
 import { Link, useNavigate } from "react-router-dom";
@@ -121,14 +121,20 @@ export default function Login() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setError("");
-    if (!form.identifier || !form.password) {
-      setError("Please enter email/username and password.");
+    const identifier = String(form.identifier || "").trim();
+    const password = String(form.password || "");
+    if (!identifier) {
+      setError("Email or username is required.");
+      return;
+    }
+    if (!password) {
+      setError("Password is required.");
       return;
     }
     setLoading(true);
     loginUser({
-      email: form.identifier,
-      password: form.password,
+      email: identifier,
+      password,
       rememberMe: form.rememberMe,
     })
       .then((data) => {
